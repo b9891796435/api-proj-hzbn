@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-defineProps<{ msg: string }>()
-
 const count = ref(0)
 </script>
 
 <template>
-  <h1>{{ msg }}</h1>
+  <h1>Vite + Vue</h1>
 
   <div class="card">
     <el-button type="primary" @click="count++">count is {{ count }}</el-button>
