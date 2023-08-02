@@ -33,6 +33,10 @@ const plugin: EggPlugin = {
     enable: true,
     package: '@eggjs/tegg-orm-plugin',
   },
+  redis: {
+    enable: true,
+    package: 'egg-redis',
+  },
 };
 
 export default plugin;
