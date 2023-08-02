@@ -10,6 +10,17 @@ export default (appInfo: EggAppInfo) => {
   // add your egg config in here
   config.middleware = [];
 
+  // TODO：从环境变量中获取
+  config.orm = {
+    client: 'mysql',
+    host: '127.0.0.1',
+    port: '3306',
+    user: 'root',
+    password: '123456',
+    database: 'api_manager',
+    charset: 'utf8mb4',
+  };
+
   // add your special config in here
   const bizConfig = {
     sourceUrl: `https://github.com/eggjs/examples/tree/master/${appInfo.name}`,

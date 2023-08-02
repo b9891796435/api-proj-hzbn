@@ -29,6 +29,10 @@ const plugin: EggPlugin = {
     enable: true,
     package: 'egg-tracer',
   },
+  teggOrm: {
+    enable: true,
+    package: '@eggjs/tegg-orm-plugin',
+  },
 };
 
 export default plugin;
