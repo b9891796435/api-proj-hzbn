@@ -41,12 +41,12 @@ export default [
                                         "description": "成功",
                                         "content": [
                                             {
-                                                "MIME": "JSON",
-                                                "schema": "commodo"
+                                                "MIME": "application/json",
+                                                "schema": ""
                                             }
                                         ]
                                     }
-                                ]
+                                ],
                             }
                         }
                     ]

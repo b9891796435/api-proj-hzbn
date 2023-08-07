@@ -18,10 +18,10 @@ requestsMock.interceptors.request.use(config => {
 });
 
 requestsMock.interceptors.response.use(response => {
-    let { status, message } = response.data;
-    if (response.status != 200) {
+    let { code, message } = response.data;
+    if (code != 200) {
         ElMessage({ message: message || 'error', type: 'warning' });
-    }
+    } 
     return response.data;
 }, error => {
     return Promise.reject(error);
