@@ -7,13 +7,10 @@
         </div>
 
         <div class="module-detail">
-            <div class="title">查询宠物详情</div>
+            <div class="title">{{ apiDetail?.summery }}</div>
             <div class="wrapper">
-                <div class="method method-get">GET</div>
-                <div class="method method-post">POST</div>
-                <div class="method method-put">PUT</div>
-                <div class="method method-delete">DELETE</div>
-                <span class="url">/pet/{petId}</span>
+                <div class="method">{{ apiDetail?.method.toUpperCase() }}</div>
+                <span class="url">{{ apiDetail?.path }}</span>
                 <div class="state">已发布</div>
             </div>
             <div class="tags">
@@ -29,7 +26,7 @@
             </div>
             <div class="description">
                 <div class="title">接口说明</div>
-                <div class="content">哈哈哈哈哈哈</div>
+                <div class="content">XXXXXXXXX</div>
             </div>
         </div>
 
@@ -47,13 +44,13 @@
                         <el-button class="button" text>生成代码</el-button>
                     </div>
                 </template>
-                <div v-for="o in 2" :key="o" class="card__item">
+                <div v-for="(parameter, index) in apiDetail?.parameters" :key="index" class="card__item">
                     <div class="param-detail">
-                        <div class="param-name">petId</div>
-                        <div class="param-type">string</div>
-                        <div class="param-required">必需</div>
+                        <div class="param-name">{{ parameter?.name }}</div>
+                        <div class="param-type">{{ parameter?.schema?.type }}</div>
+                        <div :class="{required: parameter?.required}">{{ parameter?.required ? '必需' : '可选' }}}</div>
                     </div>
-                    <p class="param-desc">宠物ID</p>
+                    <p class="param-desc">{{ parameter?.description }}</p>
                     <p class="param-case">
                         示例值：
                         <span class="value">1</span>
@@ -130,6 +127,10 @@
 </template>
 
 <script lang="ts" setup>
+import { ref, reactive, computed, onMounted, getCurrentInstance } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+
 interface Tree {
     label: string
     children?: Tree[]
@@ -140,6 +141,20 @@ const defaultProps = {
     label: 'label'
 }
 
+const store = useStore();
+const instance = getCurrentInstance();
+
+const pid = 1;  // 项目标识
+const aid = 0;  // api标识
+const apiDetail = computed(() => store.state.apis.projectAPIs?.[0]?.details);
+onMounted(() => {
+    store.dispatch('getProjectAPIs', pid).then(() => {
+        const methodElement = document.querySelector('.method');
+        methodElement!.className = `method method-${apiDetail.value?.method}`;
+    });
+})
+
+/* 
 const dataStructure: Tree[] = [
     {
         label: "songs",
@@ -198,7 +213,7 @@ const dataStructure: Tree[] = [
     {
         label: "code"
     }
-]
+] */
 </script>
 
 <style lang="less" scoped>
@@ -336,10 +351,11 @@ const dataStructure: Tree[] = [
                         margin-right: 9px;
                     }
 
-                    .param-type {}
+                    .param-type {
+                        margin-right: 16px;
+                    }
 
-                    .param-required {
-                        margin-left: 16px;
+                    .required {
                         color: #cb741a;
                     }
                 }
