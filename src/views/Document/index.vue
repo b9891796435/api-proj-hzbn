@@ -53,7 +53,8 @@
                     <div class="param-detail">
                         <div class="param-name">{{ parameter?.name }}</div>
                         <div class="param-type">{{ parameter?.schema?.type }}</div>
-                        <div :class="{ required: parameter?.required }">{{ parameter?.required ? '必需' : '可选' }}}</div>
+                        <div class="param-required" :class="{ need: parameter?.required }">{{ parameter?.required ? '必需' :
+                            '可选' }}</div>
                     </div>
                     <p class="param-desc">{{ parameter?.description }}</p>
                     <p class="param-case">
@@ -66,17 +67,18 @@
             <el-card class="box-card">
                 <template #header>
                     <div class="card-header">
-                        <span>Body参数</span>
+                        <span>Query参数</span>
                         <el-button class="button" text>生成代码</el-button>
                     </div>
                 </template>
-                <div v-for="o in 1" :key="o" class="card__item">
+                <div v-for="(parameter, index) in apiDetail?.parameters" :key="index" class="card__item">
                     <div class="param-detail">
-                        <div class="param-name">petId</div>
-                        <div class="param-type">string</div>
-                        <div class="param-required">必需</div>
+                        <div class="param-name">{{ parameter?.name }}</div>
+                        <div class="param-type">{{ parameter?.schema?.type }}</div>
+                        <div class="param-required" :class="{ need: parameter?.required }">{{ parameter?.required ? '必需' :
+                            '可选' }}</div>
                     </div>
-                    <p class="param-desc">宠物ID</p>
+                    <p class="param-desc">{{ parameter?.description }}</p>
                     <p class="param-case">
                         示例值：
                         <span class="value">1</span>
@@ -91,7 +93,7 @@
 
             <el-tabs class="border-card" type="border-card">
                 <el-tab-pane label="成功(200)">
-                    <div class="response-content">
+                    <!-- <div class="response-content">
                         <div class="response-info">
                             <span class="thin">HTTP 状态码: </span><span class="response-info__item">200</span>
                             <span class="thin">内容格式: </span><span class="response-info__item">JSON</span>
@@ -104,7 +106,19 @@
                                     </div>
                                 </template>
                                 <div class="structure-content">
-                                    <el-tree :data="dataStructure" :props="defaultProps" @node-click="handleNodeClick" />
+                                    <el-tree :data="responseStructure" :props="defaultProps" @node-click="handleNodeClick"
+                                        default-expand-all>
+                                        <template #default="{ node, data }">
+                                            <span class="custom-tree-node">
+                                                <span class="label-name">{{ node.label }}</span>
+                                                <span class="label-type">{{ data.type }}</span>
+                                                <span class="label-description">{{ data.description }}</span>
+                                                <span class="label-required" :class="{ need: data.required }">{{
+                                                    data.required ? '必需' : '可选'
+                                                }}</span>
+                                            </span>
+                                        </template>
+                                    </el-tree>
                                 </div>
                             </el-card>
                         </div>
@@ -116,10 +130,46 @@
                                     </div>
                                 </template>
                                 <div class="example-content">
-
+                                    <pre>{{ JSON.stringify(responseExample, null, "    ") }}</pre>
                                 </div>
                             </el-card>
                         </div>
+                    </div> -->
+                    <div class="response-info">
+                        <span class="thin">HTTP 状态码: </span><span class="response-info__item">200</span>
+                        <span class="thin">内容格式: </span><span class="response-info__item">JSON</span>
+                    </div>
+
+                    <div class="response-content">
+                        <el-table :data="[{}]" style="width: 100%" border>
+                            <el-table-column prop="structure" label="数据结构" min-width="60%">
+
+                                <div class="content-structure">
+                                    <el-tree :data="responseStructure" :props="defaultProps" @node-click="handleNodeClick"
+                                        default-expand-all>
+                                        <template #default="{ node, data }">
+                                            <span class="custom-tree-node">
+                                                <span class="label-name">{{ node.label }}</span>
+                                                <span class="label-type">{{ data.type }}</span>
+                                                <span class="label-description">{{ data.description }}</span>
+                                                <span class="label-required" :class="{ need: data.required }">{{
+                                                    data.required ? '必需' : '可选'
+                                                }}</span>
+                                            </span>
+                                        </template>
+                                    </el-tree>
+                                </div>
+
+                            </el-table-column>
+
+                            <el-table-column prop="example" label="示例" min-width="40%">
+
+                                <div class="content-example">
+                                    <pre>{{ JSON.stringify(responseExample, null, "    ") }}</pre>
+                                </div>
+
+                            </el-table-column>
+                        </el-table>
                     </div>
                 </el-tab-pane>
                 <el-tab-pane label="记录不存在(404)">
@@ -136,10 +186,12 @@ import { ref, reactive, computed, onMounted, getCurrentInstance } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router';
 
 interface Tree {
-    label: string
+    label: string,
+    type: string,
+    description?: string,
+    required: boolean,
     children?: Tree[]
 }
 
@@ -171,66 +223,113 @@ const handleDelete = () => {
     });
 }
 
-/* 
-const dataStructure: Tree[] = [
+/* 数据结构节点点击事件 */
+const handleNodeClick = (data: Tree) => {
+    console.log(data);
+}
+
+/* 存储返回响应的数据结构 */
+const responseStructure: Tree[] = [
     {
-        label: "songs",
-        children: [
-            {
-                label: "name"
-            },
-            {
-                label: "id"
-            },
-            {
-                label: "ar",
-                children: [
-                    {
-                        label: "id"
-                    },
-                    {
-                        label: "name"
-                    },
-                    {
-                        label: "tns"
-                    },
-                    {
-                        label: "alias"
-                    }
-                ]
-            },
-            {
-                label: "alia"
-            },
-            {
-                label: "al",
-                children: [
-                    {
-                        label: "id"
-                    },
-                    {
-                        label: "name"
-                    },
-                    {
-                        label: "picUrl"
-                    }
-                ]
-            },
-            {
-                label: "dt"
-            },
-            {
-                label: "mv"
-            },
-            {
-                label: "publishTime"
-            }
-        ]
+        label: "code",
+        type: "integer",
+        required: true,
     },
     {
-        label: "code"
+        label: "data",
+        type: "object",
+        required: true,
+        children: [
+            {
+                label: "id",
+                type: "integer",
+                description: "宠物ID编号",
+                required: true,
+            },
+            {
+                label: "category",
+                type: "object",
+                description: "分组",
+                required: true,
+                children: [
+                    {
+                        label: 'id',
+                        type: "integer",
+                        description: "分组ID编号",
+                        required: false,
+                    },
+                    {
+                        label: 'name',
+                        type: "string",
+                        description: "分组名称",
+                        required: false,
+                    }
+                ]
+            },
+            {
+                label: "name",
+                type: "string",
+                description: "名称",
+                required: true,
+            },
+            {
+                label: "photoUrls",
+                type: "array",
+                description: "照片URL",
+                required: true,
+            },
+            {
+                label: "tags",
+                type: "array",
+                description: "标签",
+                required: true,
+                children: [
+                    {
+                        label: 'id',
+                        type: "integer",
+                        description: "标签ID编号",
+                        required: false,
+                    },
+                    {
+                        label: 'name',
+                        type: "string",
+                        description: "标签名称",
+                        required: false,
+                    }
+                ]
+            },
+            {
+                label: "status",
+                type: "string",
+                description: "宠物销售状态",
+                required: true,
+            }
+        ]
     }
-] */
+]
+
+/* 存储返回响应的示例 */
+const responseExample = {
+    "code": 0,
+    "data": {
+        "name": "Hello Kity",
+        "photoUrls": [
+            "http://dummyimage.com/400x400"
+        ],
+        "id": 3,
+        "category": {
+            "id": 71,
+            "name": "Cat"
+        },
+        "tags": [
+            {
+                "id": 22,
+                "name": "Cat"
+            }
+        ],
+        "status": "sold"
+    }
+}
 </script>
 
 <style lang="less" scoped>
@@ -361,8 +460,7 @@ const dataStructure: Tree[] = [
                     .param-name {
                         color: #59abfc;
                         background-color: rgba(89, 171, 252, 0.3);
-                        width: 64px;
-                        line-height: 30px;
+                        padding: 2px 8px;
                         text-align: center;
                         border-radius: 8px;
                         margin-right: 9px;
@@ -372,7 +470,14 @@ const dataStructure: Tree[] = [
                         margin-right: 16px;
                     }
 
-                    .required {
+                    .param-required {
+                        border: 1px solid #eaeaea;
+                        border-radius: 5px;
+                        padding: 2px 8px;
+                    }
+
+                    .need {
+                        border: 1px solid transparent;
                         color: #cb741a;
                     }
                 }
@@ -436,33 +541,71 @@ const dataStructure: Tree[] = [
                 border: 1px solid #eaeaea;
             }
 
+            .response-info {
+                grid-area: info;
+                line-height: 66px;
+
+                .response-info__item {
+                    margin-right: 66px;
+                }
+            }
+
             .response-content {
-                display: grid;
-                grid-template-columns: repeat(5, 1fr);
-                grid-template-rows: 66px auto;
-                grid-template-areas:
-                    "info info info info info"
-                    "structure structure structure example example";
-
-                .response-info {
-                    grid-area: info;
-                    line-height: 66px;
-
-                    .response-info__item {
-                        margin-right: 66px;
+                .el-table {
+                    :deep(.el-table__header .cell) {
+                        font-size: 18px;
+                        font-weight: 400;
+                        color: black;
+                    }
+                    :deep(.el-table__row .el-table__cell) {
+                        vertical-align: text-top;
                     }
                 }
+                .content-structure {
+                    .el-tree {
+                        .custom-tree-node {
+                            font-size: 16px;
 
-                .structure {
-                    grid-area: structure;
+                            .label-name {
+                                color: #59abfc;
+                                background-color: rgba(89, 171, 252, 0.3);
+                                padding: 2px 8px;
+                                text-align: center;
+                                border-radius: 8px;
+                                margin-right: 9px;
+                            }
 
-                    .structure-content {}
+                            .label-type {
+                                color: black;
+                                margin-right: 9px;
+                            }
+
+                            .label-description {
+                                color: #8b939b;
+                            }
+
+                            .label-required {
+                                position: absolute;
+                                right: 0;
+                                border: 1px solid #eaeaea;
+                                border-radius: 5px;
+                                padding: 2px 8px;
+                            }
+
+                            .need {
+                                border: 1px solid transparent;
+                                color: #cb741a;
+                            }
+                        }
+
+                        :deep(.el-tree-node) {
+                            margin: 25px 0px;
+                        }
+                    }
                 }
-
-                .example {
-                    grid-area: example;
-
-                    .example-content {}
+                .content-example {
+                    color: black;
+                    font-size: 16px;
                 }
             }
         }

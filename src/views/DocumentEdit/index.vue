@@ -61,7 +61,7 @@
                     <div class="params-container">
                         <div class="subtitle">Query参数</div>
                         <div class="param-form">
-                            <el-table :data="tableData" style="width: 100%" @cell-click="editParams"
+                            <el-table :data="queryData" style="width: 100%" @cell-click="editParams"
                                 :cell-class-name="getCellIndex">
                                 <el-table-column prop="name" label="参数名" min-width="20%">
                                     <template #default="scope">
@@ -124,10 +124,64 @@
                     记录不存在(404)
                 </el-tab-pane>
                 <el-tab-pane label="Cookie">
-                    记录不存在(404)
+                    <div class="param-form">
+                        <el-table :data="cookieData" style="width: 100%" @cell-click="editParams"
+                            :cell-class-name="getCellIndex">
+                            <el-table-column prop="name" label="参数名" min-width="20%">
+                                <template #default="scope">
+                                    <input type="text" v-model="scope.row.name" class="tableCell" placeholder="添加参数" />
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="type" label="类型" min-width="15%">
+                                <template #default="scope">
+                                    <input type="text" v-model="scope.row.type" class="tableCell" />
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="value" label="示例值" min-width="20%">
+                                <template #default="scope">
+                                    <input type="text" v-model="scope.row.value" class="tableCell" />
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="desc" label="说明" min-width="35%">
+                                <template #default="scope">
+                                    <input type="text" v-model="scope.row.desc" class="tableCell" />
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="desc" label="" min-width="10%">
+                                <el-button>删除</el-button>
+                            </el-table-column>
+                        </el-table>
+                    </div>
                 </el-tab-pane>
                 <el-tab-pane label="Header">
-                    记录不存在(404)
+                    <div class="param-form">
+                        <el-table :data="headerData" style="width: 100%" @cell-click="editParams"
+                            :cell-class-name="getCellIndex">
+                            <el-table-column prop="name" label="参数名" min-width="20%">
+                                <template #default="scope">
+                                    <input type="text" v-model="scope.row.name" class="tableCell" placeholder="添加参数" />
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="type" label="类型" min-width="15%">
+                                <template #default="scope">
+                                    <input type="text" v-model="scope.row.type" class="tableCell" />
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="value" label="示例值" min-width="20%">
+                                <template #default="scope">
+                                    <input type="text" v-model="scope.row.value" class="tableCell" />
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="desc" label="说明" min-width="35%">
+                                <template #default="scope">
+                                    <input type="text" v-model="scope.row.desc" class="tableCell" />
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="desc" label="" min-width="10%">
+                                <el-button>删除</el-button>
+                            </el-table-column>
+                        </el-table>
+                    </div>
                 </el-tab-pane>
             </el-tabs>
         </div>
@@ -184,8 +238,8 @@
 
             <el-tabs class="border-card" type="border-card">
                 <el-tab-pane label="成功实例">
-                    <div class="example-content">
-                        <!-- <el-tree :data="dataStructure" :props="defaultProps" @node-click="handleNodeClick" /> -->
+                    <div class="content-example">
+                        <pre>{{ JSON.stringify(responseExample, null, "    ") }}</pre>
                     </div>
                 </el-tab-pane>
                 <el-tab-pane label="异常示例">
@@ -265,7 +319,7 @@ let editFormChanged: boolean = false;
 /* 存储解析出的Path参数名 */
 const pathData = ref();
 /* 存储Query参数信息 */
-const tableData = reactive([
+const queryData = reactive([
     {
         name: 'petId',
         type: 'number',
@@ -285,6 +339,10 @@ const tableData = reactive([
         desc: ''
     },
 ]);
+/* 存储cookie参数信息 */
+const cookieData = ref();
+/* 存储header参数信息 */
+const headerData = ref();
 let isTableRowEditable: boolean = true;
 
 onMounted(() => {
@@ -341,8 +399,8 @@ const editParams = (row, column, cell, event) => {
             editableCell.focus()
             // 如果点击了最后一列并且输入了数据，则新增一条数据
             editableCell.addEventListener('input', () => {
-                if (row.index === tableData.length - 1) {
-                    tableData.push({
+                if (row.index === queryData.length - 1) {
+                    queryData.push({
                         name: '',
                         type: '',
                         value: '',
@@ -392,6 +450,28 @@ const handleDelete = () => {
     });
 }
 
+/* 存储返回响应的示例 */
+const responseExample = {
+    "code": 0,
+    "data": {
+        "name": "Hello Kity",
+        "photoUrls": [
+            "http://dummyimage.com/400x400"
+        ],
+        "id": 3,
+        "category": {
+            "id": 71,
+            "name": "Cat"
+        },
+        "tags": [
+            {
+                "id": 22,
+                "name": "Cat"
+            }
+        ],
+        "status": "sold"
+    }
+}
 </script>
 
 <style lang="less" scoped>
@@ -710,9 +790,9 @@ const handleDelete = () => {
                 border: 1px solid #eaeaea;
             }
 
-            .example-content {
-                height: 300px;
-                background-color: #eaeaea;
+            .content-example {
+                color: black;
+                font-size: 16px;
             }
         }
     }
