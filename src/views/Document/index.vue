@@ -3,7 +3,12 @@
         <div class="fixed">
             <el-button class="first" color="#8076c3" size="large" type="primary">运行</el-button>
             <el-button size="large">生成代码</el-button>
-            <el-button size="large">删除</el-button>
+            <el-popconfirm title="确认删除该接口？" width="170" confirm-button-text="确定" cancel-button-text="取消"
+                @confirm="handleDelete">
+                <template #reference>
+                    <el-button size="large">删除</el-button>
+                </template>
+            </el-popconfirm>
         </div>
 
         <div class="module-detail">
@@ -48,7 +53,7 @@
                     <div class="param-detail">
                         <div class="param-name">{{ parameter?.name }}</div>
                         <div class="param-type">{{ parameter?.schema?.type }}</div>
-                        <div :class="{required: parameter?.required}">{{ parameter?.required ? '必需' : '可选' }}}</div>
+                        <div :class="{ required: parameter?.required }">{{ parameter?.required ? '必需' : '可选' }}}</div>
                     </div>
                     <p class="param-desc">{{ parameter?.description }}</p>
                     <p class="param-case">
@@ -130,6 +135,8 @@
 import { ref, reactive, computed, onMounted, getCurrentInstance } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router';
 
 interface Tree {
     label: string
@@ -143,16 +150,26 @@ const defaultProps = {
 
 const store = useStore();
 const instance = getCurrentInstance();
+const router = useRouter();
 
 const pid = 1;  // 项目标识
 const aid = 0;  // api标识
 const apiDetail = computed(() => store.state.apis.projectAPIs?.[0]?.details);
+
 onMounted(() => {
     store.dispatch('getProjectAPIs', pid).then(() => {
         const methodElement = document.querySelector('.method');
         methodElement!.className = `method method-${apiDetail.value?.method}`;
     });
 })
+
+/* 接口删除事件 */
+const handleDelete = () => {
+    store.dispatch('deleteAPI', { pid, aid }).then(() => {
+        ElMessage({ message: '已移动到回收站', type: 'success' });
+        router.push(`/home`);
+    });
+}
 
 /* 
 const dataStructure: Tree[] = [
@@ -469,4 +486,5 @@ const dataStructure: Tree[] = [
             }
         }
     }
-}</style>
+}
+</style>

@@ -11,6 +11,10 @@ const routes: Array<RouteRecordRaw> = [
         name: "DocumentEdit",
         component: () => import('@/views/DocumentEdit/index.vue'),
     },
+    {
+        path: "/home",
+        component: () => import('@/views/Home/index.vue'),
+    },
 ]
 
 const router = createRouter({

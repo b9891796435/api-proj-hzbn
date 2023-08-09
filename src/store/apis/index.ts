@@ -1,4 +1,4 @@
-import { reqProjectAPIs, reqUpdateAPI } from "@/api";
+import { reqProjectAPIs, reqUpdateAPI, reqDeleteAPI } from "@/api";
 import { ActionContext } from "vuex";
 import { RootState } from "@/store";
 
@@ -46,6 +46,12 @@ const actions = {
             return Promise.resolve(res.data.aid);
         } else {
             return Promise.reject(new Error('修改失败'));
+        }
+    },
+    async deleteAPI({ commit }: ActionContext<APIState, RootState>, { pid, aid }: { pid: number, aid: number }) {
+        let res: any = await reqDeleteAPI(pid, aid);
+        if (res.code !== 200) {
+            return Promise.reject(new Error('删除失败'));
         }
     }
 };

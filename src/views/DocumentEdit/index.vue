@@ -13,9 +13,13 @@
                 <el-form-item class="button">
                     <el-button class="first" color="#8076c3" size="large" type="primary" @click="onSubmit">保存</el-button>
                     <el-button size="large">运行</el-button>
-                    <el-button size="large">删除</el-button>
+                    <el-popconfirm title="确认删除该接口？" width="170" confirm-button-text="确定" cancel-button-text="取消"
+                        @confirm="handleDelete">
+                        <template #reference>
+                            <el-button size="large">删除</el-button>
+                        </template>
+                    </el-popconfirm>
                 </el-form-item>
-
             </el-form>
         </div>
 
@@ -109,7 +113,7 @@
                                     </template>
                                 </el-table-column>
                                 <el-table-column prop="desc" label="" min-width="10%">
-                                    
+
                                 </el-table-column>
                             </el-table>
                         </div>
@@ -197,14 +201,17 @@
 import { ref, reactive, watch, onMounted, computed, getCurrentInstance, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router';
 
 const instance = getCurrentInstance();
 const store = useStore();
+const router = useRouter();
 
 const pid = 1;  // 项目标识
 const aid = ref(0);  // api标识
 const oldFormData = computed(() => store.state.apis.projectAPIs?.[0]?.details);
 
+/* 表单数据 */
 const formData = reactive({
     path: '/pet/{petId}',
     method: 'get',
@@ -255,8 +262,9 @@ let editFormChanged: boolean = false;
 // };
 
 
-// Path参数从路由中获取
+/* 存储解析出的Path参数名 */
 const pathData = ref();
+/* 存储Query参数信息 */
 const tableData = reactive([
     {
         name: 'petId',
@@ -291,6 +299,7 @@ onMounted(() => {
     });
 })
 
+/* 监听表单数据是否改变 */
 watch(formData, (newVal) => {
     newFormString = JSON.stringify(newVal);
     if (newFormString === oldFormString) {
@@ -300,7 +309,7 @@ watch(formData, (newVal) => {
     }
 })
 
-
+/* 解析路径中的Path参数 */
 const getPathData = (path: string): Object[] => {
     let regexp = /{(\w+?)}/g;
     let params = path.match(regexp)?.map((param) => param.slice(1, param.length - 1));
@@ -316,10 +325,12 @@ const getPathData = (path: string): Object[] => {
     return result;
 }
 
+/* 处理路径输入事件 */
 const handlePathInput = () => {
     pathData.value = getPathData(formData.path);
 }
 
+/* 参数表格可编辑 */
 const editParams = (row, column, cell, event) => {
     if (!isTableRowEditable) return;
     // 在下一个tick时进行编辑
@@ -343,6 +354,7 @@ const editParams = (row, column, cell, event) => {
     })
 }
 
+/* 单元格的行列索引赋值 */
 const getCellIndex = (data: any) => {
     let { row, column, rowIndex, columnIndex } = data;
     // 利用单元格的className回调方法给行列索引赋值
@@ -350,6 +362,7 @@ const getCellIndex = (data: any) => {
     column.index = columnIndex;
 }
 
+/* 表单提交事件 */
 const onSubmit = async () => {
     let newaid: number = aid.value;
     if (editFormChanged) {
@@ -370,6 +383,14 @@ const onSubmit = async () => {
     oldFormString = newFormString;
     ElMessage({ message: '保存成功！', type: 'success' });
 };
+
+/* 接口删除事件 */
+const handleDelete = () => {
+    store.dispatch('deleteAPI', { pid, aid: aid.value }).then(() => {
+        ElMessage({ message: '已移动到回收站', type: 'success' });
+        router.push(`/home`);
+    });
+}
 
 </script>
 
@@ -569,10 +590,12 @@ const onSubmit = async () => {
                     }
                 }
             }
+
             .non-editable {
                 .el-table {
                     :deep(.el-table__body .el-table__cell:first-child) {
                         cursor: not-allowed;
+
                         input {
                             pointer-events: none;
                             user-select: none;
