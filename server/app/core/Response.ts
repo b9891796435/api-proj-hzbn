@@ -1,9 +1,19 @@
 enum ResponseCode {
+  // 成功
   SUCCESS = 200,
-  NOT_FOUND = 404,
-  UNAUTHORIZED = 401,
-  FORBIDDEN = 403,
+
+  // 资源相关
   BAD_REQUEST = 400,
+  FORBIDDEN = 401,
+  NOT_FOUND = 402,
+  DUPLICATE_RESOURCE = 403,
+
+  // 服务器相关
+  SERVER_ERROR = 500,
+
+  // 用户相关
+  UNAUTHORIZED = 600,
+  INVALID_PASSWORD = 601,
 }
 
 class Response<T> {
@@ -11,7 +21,7 @@ class Response<T> {
   public message: string;
   public data: T | null;
 
-  constructor(code: ResponseCode, message: string, data: T | null) {
+  constructor(code: ResponseCode, message: string, data: T | null = null) {
     this.code = code;
     this.message = message;
     this.data = data;
@@ -35,6 +45,10 @@ class Response<T> {
 
   public static badRequest<T>(message: string): Response<T> {
     return new Response<T>(ResponseCode.BAD_REQUEST, message, null);
+  }
+
+  public static serverError<T>(): Response<T> {
+    return new Response<T>(ResponseCode.SERVER_ERROR, '', null);
   }
 }
 
