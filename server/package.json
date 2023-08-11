@@ -28,14 +28,19 @@
     "@eggjs/tegg-plugin": "^3.12.0",
     "@eggjs/tegg-schedule-plugin": "^3.12.0",
     "@eggjs/tsconfig": "^1.0.0",
+    "@sinclair/typebox": "^0.30.4",
     "egg": "^3.15.0",
+    "egg-errors": "^2.3.2",
     "egg-redis": "^2.5.0",
     "egg-scripts": "^2.17.0",
     "egg-tracer": "^2.0.0",
+    "egg-typebox-validate": "^2.3.1",
     "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.1",
     "leoric": "^2.11.1",
     "mysql": "^2.18.1",
-    "mysql2": "^2.3.3"
+    "mysql2": "^2.3.3",
+    "ssri": "^10.0.4"
   },
   "devDependencies": {
     "@eggjs/tsconfig": "1",
