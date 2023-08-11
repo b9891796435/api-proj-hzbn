@@ -15,6 +15,7 @@ import { ChangeRoleVo, ChangeRoleVoRule } from './vo/ChangeRoleVo';
 import { InviteUserVo, InviteUserVoRule } from './vo/InviteUserVo';
 import { RoleEnum } from 'app/dao/bo/ProjectUserBo';
 import BusinessException from 'app/core/BusinessException';
+import { UserManager } from 'app/core/UserManager';
 
 @HTTPController({
   path: '/projects',
@@ -23,12 +24,16 @@ export class ProjectController extends AbstractController {
   @Inject()
   private readonly projectService: ProjectService;
 
+  @Inject()
+  private readonly userManager: UserManager;
+
   @HTTPMethod({
     path: '/:pid/members',
     method: HTTPMethodEnum.GET,
   })
-  async getMembers(@HTTPParam() pid: bigint) {
-    const members = await this.projectService.getMembers(pid);
+  async getMembers(@Context() ctx: EggContext, @HTTPParam() pid: bigint) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    const members = await this.projectService.getMembers(currUid, pid);
     return Response.success({ members });
   }
 
@@ -43,7 +48,8 @@ export class ProjectController extends AbstractController {
     @HTTPBody() vo: ChangeRoleVo,
   ) {
     ctx.tValidate(ChangeRoleVoRule, vo);
-    await this.projectService.changeMemberRole(pid, uid, vo.role);
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.changeMemberRole(currUid, pid, uid, vo.role);
     return Response.success();
   }
 
@@ -51,8 +57,9 @@ export class ProjectController extends AbstractController {
     path: '/:pid/members/:uid',
     method: HTTPMethodEnum.DELETE,
   })
-  async removeMember(@HTTPParam() pid: bigint, @HTTPParam() uid: bigint) {
-    await this.projectService.removeMember(pid, uid);
+  async removeMember(@Context() ctx: EggContext, @HTTPParam() pid: bigint, @HTTPParam() uid: bigint) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.removeMember(currUid, pid, uid);
     return Response.success();
   }
 
@@ -74,7 +81,8 @@ export class ProjectController extends AbstractController {
         '被邀请人的角色不能为项目拥有者',
       );
     }
-    await this.projectService.inviteMember(pid, BigInt(vo.uid), vo.role);
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.inviteMember(currUid, pid, BigInt(vo.uid), vo.role);
     return Response.success();
   }
 }

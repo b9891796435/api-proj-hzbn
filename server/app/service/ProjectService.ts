@@ -4,6 +4,7 @@ import { ProjectUserDao } from 'app/dao/ProjectUserDao';
 import { RoleEnum } from 'app/dao/bo/ProjectUserBo';
 import BusinessException from 'app/core/BusinessException';
 import { ResponseCode } from 'app/core/Response';
+import UserBo from 'app/mapper/po/ProjectUserPo';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
@@ -12,35 +13,45 @@ export class ProjectService extends AbstractService {
   @Inject()
   private readonly projectUserDao: ProjectUserDao;
 
-  async getMembers(pid: bigint) {
-    return await this.projectUserDao.retrieveMembersByProjectId(pid);
+  async getMembers(currUid: bigint, pid: bigint) {
+    const members = await this.projectUserDao.retrieveMembersByProjectId(pid);
+    // 只有项目成员才能查看项目成员
+    if (members.some(m => m.uid === currUid)) {
+      return members;
+    }
+    throw new BusinessException(ResponseCode.FORBIDDEN, '无权查看项目成员');
   }
 
-  async changeMemberRole(pid: bigint, uid: bigint, role: RoleEnum) {
-    // TODO: 检查用户是否有权限修改
+  async changeMemberRole(currUid: bigint, pid: bigint, uid: bigint, role: RoleEnum) {
+    const modifier = await this.findProjectUserOrThrow(pid, currUid);
+    this.checkModifierRole(modifier, uid, '修改');
     const po = await this.findProjectUserOrThrow(pid, uid);
     if (po.role === role) {
       return;
     }
+    // TODO：记录修改日志
     await this.projectUserDao.update(po, { role });
     this.logger.info('change role of %s in project %s from %s to %s', uid, pid, po.role, role);
   }
 
-  async removeMember(pid: bigint, uid: bigint) {
-    // TODO: 检查用户是否有权限修改
+  async removeMember(currUid: bigint, pid: bigint, uid: bigint) {
+    const modifier = await this.findProjectUserOrThrow(pid, currUid);
+    this.checkModifierRole(modifier, uid, '删除');
     const po = await this.findProjectUserOrThrow(pid, uid);
     await this.projectUserDao.remove(po);
     this.logger.info('remove member %s from project %s', uid, pid);
   }
 
-  async inviteMember(pid: bigint, uid: bigint, role: RoleEnum) {
-    // TODO: 检查用户是否有权限修改
+  async inviteMember(currUid: bigint, pid: bigint, uid: bigint, role: RoleEnum) {
+    const modifier = await this.findProjectUserOrThrow(pid, currUid);
+    this.checkModifierRole(modifier, uid, '邀请');
     try {
       await this.projectUserDao.save({
         pid,
         uid,
         role,
       });
+      this.logger.info('invite user %s to project %s with role %s', uid, pid, role);
     } catch (e: any) {
       if (e.message.includes('Duplicate entry')) {
         throw new BusinessException(
@@ -60,7 +71,7 @@ export class ProjectService extends AbstractService {
 
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {
     const po = await this.projectUserDao.findByProjectIdAndUserId(pid, uid);
-    this.logger.info('find project user', po);
+    this.logger.debug('find project user', po);
     if (!po) {
       throw new BusinessException(
         ResponseCode.NOT_FOUND,
@@ -68,5 +79,22 @@ export class ProjectService extends AbstractService {
       );
     }
     return po;
+  }
+
+  private checkUserRoleGreaterEqual(
+    userRole: RoleEnum,
+    targetRole: RoleEnum,
+  ) {
+    return userRole >= targetRole;
+  }
+
+  private checkModifierRole(modifier: UserBo, uid: bigint, predicate: string) {
+    if (!this.checkUserRoleGreaterEqual(modifier.role, RoleEnum.ADMIN)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, `无权限${predicate}项目成员`);
+    }
+    if (modifier.uid === uid) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, `无法${predicate}自己`);
+    }
+    this.logger.debug('check modifier role success');
   }
 }
