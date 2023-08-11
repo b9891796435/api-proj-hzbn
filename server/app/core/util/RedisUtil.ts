@@ -14,21 +14,29 @@ export class RedisUtil {
     expire?: number,
   ) {
     if (expire && expire > 0) {
-      // TODO：防止雪崩
-      return this.redis.setex(key, expire, value);
+      const randomizedExpire = randomizeTimeout(expire);
+      return await this.redis.setex(key, randomizedExpire, value);
     }
-    return this.redis.set(key, value);
+    return await this.redis.set(key, value);
   }
 
   async get(key: string) {
-    return this.redis.get(key);
+    return await this.redis.get(key);
   }
 
   async del(...keys: string[]) {
-    return this.redis.del(...keys);
+    return await this.redis.del(...keys);
   }
 
   async has(key: string) {
-    return this.redis.exists(key);
+    return await this.redis.exists(key);
   }
+}
+
+
+// 随机化 key 过期时间，防止缓存雪崩
+function randomizeTimeout(expire: number) {
+  const min = 1;
+  const max = expire / 5;
+  return expire + (Math.random() * (max - min));
 }

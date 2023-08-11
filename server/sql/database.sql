@@ -21,7 +21,9 @@ CREATE TABLE IF NOT EXISTS `user` (
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `salt` varchar(255) NOT NULL,
-  PRIMARY KEY (`uid`)
+  PRIMARY KEY (`uid`),
+  UNIQUE KEY `username` (`username`),
+  INDEX `user_username` (`username`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `project` (
@@ -42,12 +44,12 @@ CREATE TABLE IF NOT EXISTS `project_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `api` (
-	`aid` bigint unsigned NOT NULL AUTO_INCREMENT,
-	`pid` bigint unsigned NOT NULL,
-	`deleted` tinyint(1) NOT NULL DEFAULT '0',
-	PRIMARY KEY (`aid`),
-	INDEX `api_project` (`pid`) USING BTREE,
-	CONSTRAINT `api_project` FOREIGN KEY (`pid`) REFERENCES `project` (`pid`) ON DELETE CASCADE ON UPDATE CASCADE
+  `aid` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `pid` bigint unsigned NOT NULL,
+  `deleted` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`aid`),
+  INDEX `api_project` (`pid`) USING BTREE,
+  CONSTRAINT `api_project` FOREIGN KEY (`pid`) REFERENCES `project` (`pid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `api_history` (

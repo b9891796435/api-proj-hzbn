@@ -30,6 +30,20 @@ export default (appInfo: EggAppInfo) => {
     },
   };
 
+  // 关闭 csrf
+  config.security = {
+    csrf: {
+      enable: false,
+    },
+  };
+
+  // jwt
+  config.jwt = {
+    secret: 'qwertyuiopzxcvbnmasdfghjkl',
+    // 一星期
+    expiresIn: '7d',
+  };
+
   // add your special config in here
   const bizConfig = {
     sourceUrl: `https://github.com/eggjs/examples/tree/master/${appInfo.name}`,
