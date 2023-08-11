@@ -17,7 +17,7 @@ class Response<T> {
     this.data = data;
   }
 
-  public static success<T>(data: T): Response<T> {
+  public static success<T>(data: T | null = null): Response<T> {
     return new Response<T>(ResponseCode.SUCCESS, 'success', data);
   }
 
