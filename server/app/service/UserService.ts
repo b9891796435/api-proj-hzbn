@@ -6,6 +6,8 @@ import UserDto from './dto/UserDto';
 import * as JWTUtil from 'app/core/util/JWTUtil';
 import UserBo from 'app/dao/bo/UserBo';
 import { RedisUtil } from 'app/core/util/RedisUtil';
+import BusinessException from 'app/core/BusinessException';
+import { ResponseCode } from 'app/core/Response';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
@@ -29,21 +31,28 @@ export class UserService {
   }
 
   async register(userDto: UserDto) {
-    this.logger.info('create', userDto.username);
     const salt = crypto.randomBytes(30).toString('hex');
     const plain = `${salt}${userDto.password}`;
     const passwordIntegrity = JWTUtil.integrity(plain);
     userDto.password = passwordIntegrity;
-    return await this.userDao.save(userDto, salt);
+
+    try {
+      return await this.userDao.save(userDto, salt);
+    } catch {
+      throw new BusinessException(
+        ResponseCode.DUPLICATE_RESOURCE,
+        '用户名已被注册',
+      );
+    }
   }
 
   async login(username: string, password: string) {
     const userBo = await this.userDao.findByUsername(username);
     if (!userBo) {
-      throw new Error('用户不存在');
+      throw new BusinessException(ResponseCode.NOT_FOUND, '用户不存在');
     }
     if (!this.verifyPassword(userBo, password)) {
-      throw new Error('密码错误');
+      throw new BusinessException(ResponseCode.INVALID_PASSWORD, '密码错误');
     }
     const { secret, expiresIn } = this.config.jwt;
     const token = JWTUtil.createToken(userBo.uid, secret, expiresIn);
