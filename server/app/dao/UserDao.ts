@@ -15,7 +15,7 @@ export class UserDao {
   private readonly userMapper: typeof UserMapper;
 
   async findById(id: bigint) {
-    return await this.userMapper.findOne({ uid: id });
+    return await this.userMapper.findOne({ uid: id }) as unknown as UserBo;
   }
 
   async save(userDto: UserDto, salt: string) {
