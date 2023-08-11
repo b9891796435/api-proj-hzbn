@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import { AccessLevel, SingletonProto, Inject } from '@eggjs/tegg';
-import { EggLogger, EggAppConfig } from 'egg';
 import { UserDao } from 'app/dao/UserDao';
 import UserDto from './dto/UserDto';
 import * as JWTUtil from 'app/core/util/JWTUtil';
@@ -8,16 +7,12 @@ import UserBo from 'app/dao/bo/UserBo';
 import { RedisUtil } from 'app/core/util/RedisUtil';
 import BusinessException from 'app/core/BusinessException';
 import { ResponseCode } from 'app/core/Response';
+import { AbstractService } from './AbstractService';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
 })
-export class UserService {
-  @Inject()
-  private readonly logger: EggLogger;
-
-  @Inject()
-  private readonly config: EggAppConfig;
+export class UserService extends AbstractService {
 
   @Inject()
   private readonly redisUtil: RedisUtil;
