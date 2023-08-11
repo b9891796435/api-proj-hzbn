@@ -29,3 +29,27 @@ export function createToken(
   );
   return token;
 }
+
+// 校验token
+export async function verifyToken(token: string, secret: string) {
+  try {
+    return await promisifiedVerify(token, secret);
+  } catch (err) {
+    return null;
+  }
+}
+
+async function promisifiedVerify(
+  token: string,
+  secret: string,
+): Promise<bigint> {
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, secret, (err, payload) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(payload as bigint);
+    });
+  });
+}
