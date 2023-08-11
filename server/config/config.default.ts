@@ -30,6 +30,13 @@ export default (appInfo: EggAppInfo) => {
     },
   };
 
+  // 关闭 csrf
+  config.security = {
+    csrf: {
+      enable: false,
+    },
+  };
+
   // add your special config in here
   const bizConfig = {
     sourceUrl: `https://github.com/eggjs/examples/tree/master/${appInfo.name}`,
