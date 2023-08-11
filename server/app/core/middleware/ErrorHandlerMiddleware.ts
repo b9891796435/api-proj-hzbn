@@ -17,6 +17,7 @@ export async function ErrorHandlerMiddleware(ctx: EggContext, next: Next) {
       return;
     }
     // 否则隐藏错误信息
+    ctx.logger.debug(error);
     ctx.body = Response.serverError();
   }
 }

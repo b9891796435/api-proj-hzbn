@@ -46,6 +46,10 @@ export class ProjectUserDao {
     return modle as unknown as ProjectUserPo;
   }
 
+  async save(po: ProjectUserPo) {
+    await this.projectUserMapper.create(po);
+  }
+
   async update(po: ProjectUserPo, update: Partial<ProjectUserPo>) {
     await this.projectUserMapper.update(
       {

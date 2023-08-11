@@ -33,6 +33,31 @@ export class ProjectService extends AbstractService {
     this.logger.info('remove member %s from project %s', uid, pid);
   }
 
+  async inviteMember(pid: bigint, uid: bigint, role: RoleEnum) {
+    // TODO: 检查用户是否有权限修改
+    try {
+      await this.projectUserDao.save({
+        pid,
+        uid,
+        role,
+      });
+    } catch (e: any) {
+      if (e.message.includes('Duplicate entry')) {
+        throw new BusinessException(
+          ResponseCode.DUPLICATE_RESOURCE,
+          '用户已经在项目中',
+        );
+      } else if (e.message.includes('foreign key constraint fails')) {
+        throw new BusinessException(
+          ResponseCode.NOT_FOUND,
+          '项目或用户不存在',
+        );
+      } else {
+        throw e;
+      }
+    }
+  }
+
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {
     const po = await this.projectUserDao.findByProjectIdAndUserId(pid, uid);
     this.logger.info('find project user', po);
