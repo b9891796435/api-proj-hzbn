@@ -57,8 +57,8 @@ export class UserService extends AbstractService {
     };
   }
 
-  private saveUserToRedis(token: string, user: UserBo) {
-    this.redisUtil.set(`TOKEN_${token}`, JSON.stringify(user));
+  public async saveUserToRedis(token: string, user: UserBo) {
+    await this.redisUtil.set(`TOKEN_${token}`, JSON.stringify(user));
   }
 
   private verifyPassword(user: UserBo, password: string) {
