@@ -43,4 +43,16 @@ export class ProjectController extends AbstractController {
     await this.projectService.changeMemberRole(pid, uid, vo.role);
     return Response.success();
   }
+
+  @HTTPMethod({
+    path: '/:pid/members/:uid',
+    method: HTTPMethodEnum.DELETE,
+  })
+  async removeMember(
+    @HTTPParam() pid: bigint,
+    @HTTPParam() uid: bigint,
+  ) {
+    await this.projectService.removeMember(pid, uid);
+    return Response.success();
+  }
 }

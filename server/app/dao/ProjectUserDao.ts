@@ -55,4 +55,14 @@ export class ProjectUserDao {
       update,
     );
   }
+
+  async remove(po: ProjectUserPo) {
+    await this.projectUserMapper.remove(
+      {
+        uid: po.uid,
+        pid: po.pid,
+      },
+      true,
+    );
+  }
 }

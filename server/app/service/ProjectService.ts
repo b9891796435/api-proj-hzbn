@@ -18,15 +18,30 @@ export class ProjectService extends AbstractService {
 
   async changeMemberRole(pid: bigint, uid: bigint, role: RoleEnum) {
     // TODO: 检查用户是否有权限修改
-    const po = await this.projectUserDao.findByProjectIdAndUserId(pid, uid);
-    this.logger.info('changeMemberRole', po);
-    if (!po) {
-      throw new BusinessException(ResponseCode.NOT_FOUND, '项目或项目成员不存在');
-    }
+    const po = await this.findProjectUserOrThrow(pid, uid);
     if (po.role === role) {
       return;
     }
-    this.logger.info('changeMemberRole to', role);
-    this.projectUserDao.update(po, { role });
+    await this.projectUserDao.update(po, { role });
+    this.logger.info('change role of %s in project %s from %s to %s', uid, pid, po.role, role);
+  }
+
+  async removeMember(pid: bigint, uid: bigint) {
+    // TODO: 检查用户是否有权限修改
+    const po = await this.findProjectUserOrThrow(pid, uid);
+    await this.projectUserDao.remove(po);
+    this.logger.info('remove member %s from project %s', uid, pid);
+  }
+
+  private async findProjectUserOrThrow(pid: bigint, uid: bigint) {
+    const po = await this.projectUserDao.findByProjectIdAndUserId(pid, uid);
+    this.logger.info('find project user', po);
+    if (!po) {
+      throw new BusinessException(
+        ResponseCode.NOT_FOUND,
+        '项目或项目成员不存在',
+      );
+    }
+    return po;
   }
 }
