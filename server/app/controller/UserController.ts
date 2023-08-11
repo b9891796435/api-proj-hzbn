@@ -1,16 +1,20 @@
 import {
+  Context,
+  EggContext,
+  HTTPBody,
   HTTPController,
   HTTPMethod,
   HTTPMethodEnum,
-  HTTPParam,
   Inject,
 } from '@eggjs/tegg';
+import Response from 'app/core/Response';
 import { UserService } from 'app/service/UserService';
 import { EggLogger } from 'egg';
+import { UserVo, UserVoRule } from './vo/UserVo';
 
 // TODO: 使用中间件捕获异常
 @HTTPController({
-  path: '/users',
+  path: '/',
 })
 export class UserController {
   @Inject()
@@ -20,24 +24,60 @@ export class UserController {
   private readonly userService: UserService;
 
   @HTTPMethod({
-    path: '/:id',
-    method: HTTPMethodEnum.GET,
+    path: '/register',
+    method: HTTPMethodEnum.POST,
   })
-  async getUser(@HTTPParam() id: bigint) {
-    this.logger.info('getUser by id: %s', id);
-    const user = await this.userService.findById(id);
-    // TODO：封装一个统一的返回格式
-    if (!user) {
-      return {
-        code: 404,
-        message: 'User not exist',
-        data: null,
-      };
+  async register(@Context() ctx: EggContext, @HTTPBody() userVo: UserVo) {
+    this.logger.info('register user: %s', userVo.username);
+    try {
+      ctx.tValidate(UserVoRule, userVo);
+    } catch (e: any) {
+      this.logger.error(
+        'register user: %s, error: %s',
+        userVo.username,
+        e.message,
+      );
+      return Response.badRequest('参数错误');
     }
-    return {
-      code: 200,
-      message: 'success',
-      data: user,
-    };
+    try {
+      await this.userService.register(userVo);
+    } catch (e: any) {
+      this.logger.error(
+        'register user: %s, error: %s',
+        userVo.username,
+        e.message,
+      );
+      return Response.badRequest('重复用户名');
+    }
+    return Response.success();
+  }
+
+  @HTTPMethod({
+    path: '/login',
+    method: HTTPMethodEnum.POST,
+  })
+  async login(@Context() ctx: EggContext, @HTTPBody() userVo: UserVo) {
+    this.logger.info('register user: %s', userVo.username);
+    try {
+      ctx.tValidate(UserVoRule, userVo);
+    } catch (e: any) {
+      this.logger.error(
+        'register user: %s, error: %s',
+        userVo.username,
+        e.message,
+      );
+      return Response.badRequest('参数错误');
+    }
+    try {
+      const res = await this.userService.login(userVo.username, userVo.password);
+      return Response.success(res);
+    } catch (e: any) {
+      this.logger.error(
+        'register user: %s, error: %s',
+        userVo.username,
+        e.message,
+      );
+      return Response.badRequest(e.message);
+    }
   }
 }

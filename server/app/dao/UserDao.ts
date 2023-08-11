@@ -1,5 +1,7 @@
 import { AccessLevel, SingletonProto, Inject } from '@eggjs/tegg';
 import { UserMapper } from 'app/mapper/UserMapper';
+import UserDto from 'app/service/dto/UserDto';
+import UserBo from './bo/UserBo';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
@@ -13,6 +15,21 @@ export class UserDao {
   private readonly userMapper: typeof UserMapper;
 
   async findById(id: bigint) {
-    return await this.userMapper.findOne({ id });
+    return await this.userMapper.findOne({ uid: id });
+  }
+
+  async save(userDto: UserDto, salt: string) {
+    return await this.userMapper.create({
+      ...userDto,
+      salt,
+    });
+  }
+
+  async findByUsername(username: string) {
+    const user = this.userMapper.findOne({ username });
+    if (!user) {
+      return null;
+    }
+    return user as unknown as UserBo;
   }
 }
