@@ -37,4 +37,22 @@ export class ProjectUserDao {
     this.logger.info('retrieveMembersByProjectId', members);
     return members;
   }
+
+  async findByProjectIdAndUserId(pid: bigint, uid: bigint) {
+    const modle = await this.projectUserMapper.findOne({
+      pid,
+      uid,
+    });
+    return modle as unknown as ProjectUserPo;
+  }
+
+  async update(po: ProjectUserPo, update: Partial<ProjectUserPo>) {
+    await this.projectUserMapper.update(
+      {
+        uid: po.uid,
+        pid: po.pid,
+      },
+      update,
+    );
+  }
 }

@@ -40,10 +40,7 @@ export class ProjectController extends AbstractController {
     @HTTPBody() vo: ChangeRoleVo,
   ) {
     ctx.tValidate(ChangeRoleVoRule, vo);
-    return Response.success({
-      pid,
-      uid,
-      role: vo.role,
-    });
+    await this.projectService.changeMemberRole(pid, uid, vo.role);
+    return Response.success();
   }
 }
