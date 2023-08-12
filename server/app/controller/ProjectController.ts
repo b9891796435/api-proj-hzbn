@@ -157,4 +157,18 @@ export class ProjectController extends AbstractController {
     const apis = await this.projectService.getAPIsInRecycleBin(currUid, pid);
     return Response.success({ apis });
   }
+
+  @HTTPMethod({
+    path: ':pid/recycle_bin/:aid',
+    method: HTTPMethodEnum.POST,
+  })
+  async recoveryAPIsInRecycleBin(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPParam() aid: bigint,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.recoveryAPIsInRecycleBin(currUid, pid, aid);
+    return Response.success();
+  }
 }

@@ -114,6 +114,18 @@ export class ProjectService extends AbstractService {
     return await this.apiDao.retrieveAPIsByProjectId(pid, { deleted: true });
   }
 
+  async recoveryAPIsInRecycleBin(currUid: bigint, pid: bigint, aid: bigint) {
+    const user = await this.findProjectUserOrThrow(pid, currUid);
+    if (!user || !this.checkUserRoleGreaterEqual(user.role, RoleEnum.WRITER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    const api = await this.apiDao.findByAidAndDeleted(aid, true);
+    if (!api) {
+      throw new BusinessException(ResponseCode.NOT_FOUND, 'API不存在');
+    }
+    await this.apiDao.update(api.aid, { deleted: false });
+  }
+
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {
     const po = await this.projectUserDao.findByProjectIdAndUserId(pid, uid);
     this.logger.debug('find project user', po);

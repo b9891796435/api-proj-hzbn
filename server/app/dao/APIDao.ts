@@ -21,6 +21,13 @@ export class APIDao {
   @Inject()
   private readonly apiHistoryDao: APIHistoryDao;
 
+  async findByAidAndDeleted(aid: bigint, deleted: boolean) {
+    return this.apiMapper.findOne({
+      aid,
+      deleted,
+    });
+  }
+
   async retrieveAPIsByProjectId(pid: bigint, options: { deleted: boolean } = { deleted: false }) {
     const modles = await this.apiMapper.find({
       pid,
