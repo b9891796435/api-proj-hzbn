@@ -154,6 +154,19 @@ export class ProjectService extends AbstractService {
     return histories;
   }
 
+  async restoreAPiHistory(currUid: bigint, pid: bigint, aid: bigint, hid: bigint) {
+    const user = await this.findProjectUserOrThrow(pid, currUid);
+    if (!this.checkUserRoleGreaterEqual(user.role, RoleEnum.WRITER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    const hisotry = await this.apiHistoyDao.findByHidAndAid(hid, aid);
+    if (!hisotry) {
+      throw new BusinessException(ResponseCode.NOT_FOUND, '历史记录不存在');
+    }
+    // 删除 aid 之后的历史记录
+    await this.apiHistoyDao.removeWhereTimeGreaterThan(aid, hisotry.time);
+  }
+
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {
     const po = await this.projectUserDao.findByProjectIdAndUserId(pid, uid);
     this.logger.debug('find project user', po);

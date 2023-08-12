@@ -18,6 +18,10 @@ export class APIHistoryDao {
       .order('time', 'desc')) as unknown as APIHistoryBo;
   }
 
+  async findByHidAndAid(hid: bigint, aid: bigint) {
+    return await this.apiHisotryMapper.findOne({ hid, aid });
+  }
+
   async retrieveByAid(aid: bigint) {
     return await this.apiHisotryMapper.find({
       aid,
@@ -32,4 +36,12 @@ export class APIHistoryDao {
     });
   }
 
+  async removeWhereTimeGreaterThan(aid: bigint, time: Date) {
+    await this.apiHisotryMapper.remove({
+      aid,
+      time: {
+        $gt: time,
+      },
+    });
+  }
 }

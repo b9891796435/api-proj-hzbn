@@ -17,6 +17,7 @@ import { RoleEnum } from 'app/dao/bo/ProjectUserBo';
 import BusinessException from 'app/core/BusinessException';
 import { UserManager } from 'app/core/UserManager';
 import { CreateAPIVo, CreateAPIVoRule } from './vo/CreateAPIVo';
+import { RestoreAPIHistoryVo, RestoreAPIHistoryVoRule } from './vo/RestoreAPIHistoryVo';
 
 @HTTPController({
   path: '/projects',
@@ -183,6 +184,22 @@ export class ProjectController extends AbstractController {
   ) {
     const currUid = await this.userManager.getAuthorizedUserId(ctx);
     const apis = await this.projectService.getAPIHistories(currUid, pid, aid);
+    return Response.success({ apis });
+  }
+
+  @HTTPMethod({
+    path: ':pid/apis/:aid/history',
+    method: HTTPMethodEnum.PUT,
+  })
+  async restoreAPIHistory(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPParam() aid: bigint,
+    @HTTPBody() vo: RestoreAPIHistoryVo,
+  ) {
+    ctx.tValidate(RestoreAPIHistoryVoRule, vo);
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    const apis = await this.projectService.restoreAPiHistory(currUid, pid, aid, BigInt(vo.hid));
     return Response.success({ apis });
   }
 }
