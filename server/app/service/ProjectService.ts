@@ -5,6 +5,10 @@ import { RoleEnum } from 'app/dao/bo/ProjectUserBo';
 import BusinessException from 'app/core/BusinessException';
 import { ResponseCode } from 'app/core/Response';
 import UserBo from 'app/mapper/po/ProjectUserPo';
+import { APIDao } from 'app/dao/APIDao';
+import APIDto from './dto/APIDto';
+import { APIHistoryDao } from 'app/dao/APIHistoryDao';
+import { UserDao } from 'app/dao/UserDao';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
@@ -12,6 +16,15 @@ import UserBo from 'app/mapper/po/ProjectUserPo';
 export class ProjectService extends AbstractService {
   @Inject()
   private readonly projectUserDao: ProjectUserDao;
+
+  @Inject()
+  private readonly userDao: UserDao;
+
+  @Inject()
+  private readonly apiDao: APIDao;
+
+  @Inject()
+  private readonly apiHistoyDao: APIHistoryDao;
 
   async getMembers(currUid: bigint, pid: bigint) {
     const members = await this.projectUserDao.retrieveMembersByProjectId(pid);
@@ -67,6 +80,95 @@ export class ProjectService extends AbstractService {
         throw e;
       }
     }
+  }
+
+  async getAPIs(currUid: bigint, pid: bigint) {
+    // ignore return value
+    await this.findProjectUserOrThrow(pid, currUid);
+    return await this.apiDao.retrieveAPIsByProjectId(pid);
+  }
+
+  async createAPI(currUid: bigint, pid: bigint, API: APIDto) {
+    const user = await this.findProjectUserOrThrow(pid, currUid);
+    if (!user || !this.checkUserRoleGreaterEqual(user.role, RoleEnum.WRITER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    await this.apiDao.save(pid, currUid, API);
+  }
+
+  async modifyAPI(currUid: bigint, pid: bigint, aid: bigint, API: APIDto) {
+    const user = await this.findProjectUserOrThrow(pid, currUid);
+    if (!user || !this.checkUserRoleGreaterEqual(user.role, RoleEnum.WRITER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    await this.apiHistoyDao.save(aid, currUid, API);
+  }
+
+  async trashAPI(currUid: bigint, pid: bigint, aid: bigint) {
+    const user = await this.findProjectUserOrThrow(pid, currUid);
+    if (!user || !this.checkUserRoleGreaterEqual(user.role, RoleEnum.WRITER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    await this.apiDao.update(aid, { deleted: true });
+  }
+
+  async getAPIsInRecycleBin(currUid: bigint, pid: bigint) {
+    // ignore return value
+    await this.findProjectUserOrThrow(pid, currUid);
+    return await this.apiDao.retrieveAPIsByProjectId(pid, { deleted: true });
+  }
+
+  async recoveryAPIsInRecycleBin(currUid: bigint, pid: bigint, aid: bigint) {
+    const user = await this.findProjectUserOrThrow(pid, currUid);
+    if (!user || !this.checkUserRoleGreaterEqual(user.role, RoleEnum.WRITER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    const api = await this.apiDao.findByAidAndDeleted(aid, true);
+    if (!api) {
+      throw new BusinessException(ResponseCode.NOT_FOUND, 'API不存在');
+    }
+    await this.apiDao.update(api.aid, { deleted: false });
+  }
+
+  async getAPIHistories(currUid: bigint, pid: bigint, aid: bigint) {
+    // ignore return value
+    await this.findProjectUserOrThrow(pid, currUid);
+    const api = await this.apiDao.findByAidAndDeleted(aid, false);
+    if (!api) {
+      throw new BusinessException(ResponseCode.NOT_FOUND, 'API不存在或已删除');
+    }
+    const models = await this.apiHistoyDao.retrieveByAid(aid);
+    const histories: {
+      hid: bigint;
+      username: string;
+      time: Date;
+    }[] = [];
+    for (const model of models) {
+      const user = await this.userDao.findById(model.uid);
+      histories.push({
+        hid: model.hid,
+        username: user.username,
+        time: model.time,
+      });
+    }
+    return histories;
+  }
+
+  async restoreAPiHistory(currUid: bigint, pid: bigint, aid: bigint, hid: bigint) {
+    const user = await this.findProjectUserOrThrow(pid, currUid);
+    if (!this.checkUserRoleGreaterEqual(user.role, RoleEnum.WRITER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    const api = await this.apiDao.findByAidAndDeleted(aid, false);
+    if (!api) {
+      throw new BusinessException(ResponseCode.NOT_FOUND, 'API不存在或已删除');
+    }
+    const hisotry = await this.apiHistoyDao.findByHidAndAid(hid, aid);
+    if (!hisotry) {
+      throw new BusinessException(ResponseCode.NOT_FOUND, '历史记录不存在');
+    }
+    // 删除 aid 之后的历史记录
+    await this.apiHistoyDao.removeWhereTimeGreaterThan(aid, hisotry.time);
   }
 
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {

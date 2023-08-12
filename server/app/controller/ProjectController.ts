@@ -16,6 +16,8 @@ import { InviteUserVo, InviteUserVoRule } from './vo/InviteUserVo';
 import { RoleEnum } from 'app/dao/bo/ProjectUserBo';
 import BusinessException from 'app/core/BusinessException';
 import { UserManager } from 'app/core/UserManager';
+import { CreateAPIVo, CreateAPIVoRule } from './vo/CreateAPIVo';
+import { RestoreAPIHistoryVo, RestoreAPIHistoryVoRule } from './vo/RestoreAPIHistoryVo';
 
 @HTTPController({
   path: '/projects',
@@ -84,5 +86,120 @@ export class ProjectController extends AbstractController {
     const currUid = await this.userManager.getAuthorizedUserId(ctx);
     await this.projectService.inviteMember(currUid, pid, BigInt(vo.uid), vo.role);
     return Response.success();
+  }
+
+  @HTTPMethod({
+    path: '/:pid/apis',
+    method: HTTPMethodEnum.GET,
+  })
+  async getAPIs(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    const apis = await this.projectService.getAPIs(currUid, pid);
+    return Response.success({ apis });
+  }
+
+  @HTTPMethod({
+    path: '/:pid/apis',
+    method: HTTPMethodEnum.POST,
+  })
+  async createAPI(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPBody() vo: CreateAPIVo,
+  ) {
+    ctx.tValidate(CreateAPIVoRule, vo);
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.createAPI(currUid, pid, vo);
+    return Response.success();
+  }
+
+  @HTTPMethod({
+    path: ':pid/apis/:aid',
+    method: HTTPMethodEnum.PUT,
+  })
+  async modifyAPI(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPParam() aid: bigint,
+    @HTTPBody() vo: CreateAPIVo,
+  ) {
+    ctx.tValidate(CreateAPIVoRule, vo);
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.modifyAPI(currUid, pid, aid, vo);
+    return Response.success();
+  }
+
+  @HTTPMethod({
+    path: ':pid/apis/:aid',
+    method: HTTPMethodEnum.DELETE,
+  })
+  async trashAPI(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPParam() aid: bigint,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.trashAPI(currUid, pid, aid);
+    return Response.success();
+  }
+
+  @HTTPMethod({
+    path: ':pid/recycle_bin',
+    method: HTTPMethodEnum.GET,
+  })
+  async getAPIsInRecycleBin(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    const apis = await this.projectService.getAPIsInRecycleBin(currUid, pid);
+    return Response.success({ apis });
+  }
+
+  @HTTPMethod({
+    path: ':pid/recycle_bin/:aid',
+    method: HTTPMethodEnum.POST,
+  })
+  async recoveryAPIsInRecycleBin(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPParam() aid: bigint,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.recoveryAPIsInRecycleBin(currUid, pid, aid);
+    return Response.success();
+  }
+
+  @HTTPMethod({
+    path: ':pid/apis/:aid/history',
+    method: HTTPMethodEnum.GET,
+  })
+  async getAPIHistories(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPParam() aid: bigint,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    const apis = await this.projectService.getAPIHistories(currUid, pid, aid);
+    return Response.success({ apis });
+  }
+
+  @HTTPMethod({
+    path: ':pid/apis/:aid/history',
+    method: HTTPMethodEnum.PUT,
+  })
+  async restoreAPIHistory(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPParam() aid: bigint,
+    @HTTPBody() vo: RestoreAPIHistoryVo,
+  ) {
+    ctx.tValidate(RestoreAPIHistoryVoRule, vo);
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    const apis = await this.projectService.restoreAPiHistory(currUid, pid, aid, BigInt(vo.hid));
+    return Response.success({ apis });
   }
 }

@@ -49,7 +49,7 @@ async function promisifiedVerify(
         reject(err);
         return;
       }
-      resolve(payload as bigint);
+      resolve(payload.uid as bigint);
     });
   });
 }
