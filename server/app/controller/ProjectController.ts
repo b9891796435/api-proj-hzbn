@@ -85,4 +85,17 @@ export class ProjectController extends AbstractController {
     await this.projectService.inviteMember(currUid, pid, BigInt(vo.uid), vo.role);
     return Response.success();
   }
+
+  @HTTPMethod({
+    path: '/:pid/apis',
+    method: HTTPMethodEnum.GET,
+  })
+  async getAPIs(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    const apis = await this.projectService.getAPIs(currUid, pid);
+    return Response.success({ apis });
+  }
 }

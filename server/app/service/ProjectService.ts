@@ -5,6 +5,7 @@ import { RoleEnum } from 'app/dao/bo/ProjectUserBo';
 import BusinessException from 'app/core/BusinessException';
 import { ResponseCode } from 'app/core/Response';
 import UserBo from 'app/mapper/po/ProjectUserPo';
+import { APIDao } from 'app/dao/APIDao';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
@@ -12,6 +13,9 @@ import UserBo from 'app/mapper/po/ProjectUserPo';
 export class ProjectService extends AbstractService {
   @Inject()
   private readonly projectUserDao: ProjectUserDao;
+
+  @Inject()
+  private readonly apiDao: APIDao;
 
   async getMembers(currUid: bigint, pid: bigint) {
     const members = await this.projectUserDao.retrieveMembersByProjectId(pid);
@@ -67,6 +71,14 @@ export class ProjectService extends AbstractService {
         throw e;
       }
     }
+  }
+
+  async getAPIs(currUid: bigint, pid: bigint) {
+    const user = await this.projectUserDao.findByProjectIdAndUserId(pid, currUid);
+    if (!user) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    return await this.apiDao.retrieveAPIsByProjectId(pid);
   }
 
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {
