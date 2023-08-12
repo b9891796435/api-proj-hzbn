@@ -18,6 +18,12 @@ export class APIHistoryDao {
       .order('time', 'desc')) as unknown as APIHistoryBo;
   }
 
+  async retrieveByAid(aid: bigint) {
+    return await this.apiHisotryMapper.find({
+      aid,
+    });
+  }
+
   async save(aid: bigint, uid: bigint, details: APIDto) {
     await this.apiHisotryMapper.create({
       ...details,
@@ -25,4 +31,5 @@ export class APIHistoryDao {
       uid,
     });
   }
+
 }

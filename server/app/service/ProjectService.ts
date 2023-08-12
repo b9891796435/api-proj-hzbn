@@ -8,6 +8,7 @@ import UserBo from 'app/mapper/po/ProjectUserPo';
 import { APIDao } from 'app/dao/APIDao';
 import APIDto from './dto/APIDto';
 import { APIHistoryDao } from 'app/dao/APIHistoryDao';
+import { UserDao } from 'app/dao/UserDao';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
@@ -15,6 +16,9 @@ import { APIHistoryDao } from 'app/dao/APIHistoryDao';
 export class ProjectService extends AbstractService {
   @Inject()
   private readonly projectUserDao: ProjectUserDao;
+
+  @Inject()
+  private readonly userDao: UserDao;
 
   @Inject()
   private readonly apiDao: APIDao;
@@ -124,6 +128,30 @@ export class ProjectService extends AbstractService {
       throw new BusinessException(ResponseCode.NOT_FOUND, 'API不存在');
     }
     await this.apiDao.update(api.aid, { deleted: false });
+  }
+
+  async getAPIHistories(currUid: bigint, pid: bigint, aid: bigint) {
+    // ignore return value
+    await this.findProjectUserOrThrow(pid, currUid);
+    const api = await this.apiDao.findByAidAndDeleted(aid, false);
+    if (!api) {
+      throw new BusinessException(ResponseCode.NOT_FOUND, 'API不存在或已删除');
+    }
+    const models = await this.apiHistoyDao.retrieveByAid(aid);
+    const histories: {
+      hid: bigint;
+      username: string;
+      time: Date;
+    }[] = [];
+    for (const model of models) {
+      const user = await this.userDao.findById(model.uid);
+      histories.push({
+        hid: model.hid,
+        username: user.username,
+        time: model.time,
+      });
+    }
+    return histories;
   }
 
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {
