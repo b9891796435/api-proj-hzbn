@@ -159,6 +159,10 @@ export class ProjectService extends AbstractService {
     if (!this.checkUserRoleGreaterEqual(user.role, RoleEnum.WRITER)) {
       throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
     }
+    const api = await this.apiDao.findByAidAndDeleted(aid, false);
+    if (!api) {
+      throw new BusinessException(ResponseCode.NOT_FOUND, 'API不存在或已删除');
+    }
     const hisotry = await this.apiHistoyDao.findByHidAndAid(hid, aid);
     if (!hisotry) {
       throw new BusinessException(ResponseCode.NOT_FOUND, '历史记录不存在');
