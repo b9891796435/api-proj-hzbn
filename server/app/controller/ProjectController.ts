@@ -130,4 +130,18 @@ export class ProjectController extends AbstractController {
     await this.projectService.modifyAPI(currUid, pid, aid, vo);
     return Response.success();
   }
+
+  @HTTPMethod({
+    path: ':pid/apis/:aid',
+    method: HTTPMethodEnum.DELETE,
+  })
+  async trashAPI(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPParam() aid: bigint,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.trashAPI(currUid, pid, aid);
+    return Response.success();
+  }
 }

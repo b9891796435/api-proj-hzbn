@@ -4,6 +4,7 @@ import APIBo from './bo/APIBo';
 import { EggLogger } from 'typings/app';
 import { APIHistoryDao } from './APIHistoryDao';
 import APIDto from 'app/service/dto/APIDto';
+import APIPo from 'app/mapper/po/APIPo';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
@@ -51,5 +52,14 @@ export class APIDao {
       deleted: false,
     });
     await this.apiHistoryDao.save(po.aid, uid, details);
+  }
+
+  async update(aid: bigint, update: Partial<APIPo>) {
+    await this.apiMapper.update(
+      {
+        aid,
+      },
+      update,
+    );
   }
 }

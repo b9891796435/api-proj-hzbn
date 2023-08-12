@@ -102,6 +102,14 @@ export class ProjectService extends AbstractService {
     await this.apiHistoyDao.save(aid, currUid, API);
   }
 
+  async trashAPI(currUid: bigint, pid: bigint, aid: bigint) {
+    const user = await this.findProjectUserOrThrow(pid, currUid);
+    if (!user || !this.checkUserRoleGreaterEqual(user.role, RoleEnum.WRITER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    await this.apiDao.update(aid, { deleted: true });
+  }
+
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {
     const po = await this.projectUserDao.findByProjectIdAndUserId(pid, uid);
     this.logger.debug('find project user', po);
