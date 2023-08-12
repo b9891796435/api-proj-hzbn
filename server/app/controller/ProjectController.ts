@@ -114,4 +114,20 @@ export class ProjectController extends AbstractController {
     await this.projectService.createAPI(currUid, pid, vo);
     return Response.success();
   }
+
+  @HTTPMethod({
+    path: ':pid/apis/:aid',
+    method: HTTPMethodEnum.PUT,
+  })
+  async modifyAPI(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPParam() aid: bigint,
+    @HTTPBody() vo: CreateAPIVo,
+  ) {
+    ctx.tValidate(CreateAPIVoRule, vo);
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.modifyAPI(currUid, pid, aid, vo);
+    return Response.success();
+  }
 }
