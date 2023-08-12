@@ -6,6 +6,7 @@ import BusinessException from 'app/core/BusinessException';
 import { ResponseCode } from 'app/core/Response';
 import UserBo from 'app/mapper/po/ProjectUserPo';
 import { APIDao } from 'app/dao/APIDao';
+import APIDto from './dto/APIDto';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
@@ -79,6 +80,14 @@ export class ProjectService extends AbstractService {
       throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
     }
     return await this.apiDao.retrieveAPIsByProjectId(pid);
+  }
+
+  async createAPI(currUid: bigint, pid: bigint, API: APIDto) {
+    const user = await this.findProjectUserOrThrow(pid, currUid);
+    if (!user || !this.checkUserRoleGreaterEqual(user.role, RoleEnum.WRITER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    await this.apiDao.save(pid, currUid, API);
   }
 
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {

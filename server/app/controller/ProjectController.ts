@@ -16,6 +16,7 @@ import { InviteUserVo, InviteUserVoRule } from './vo/InviteUserVo';
 import { RoleEnum } from 'app/dao/bo/ProjectUserBo';
 import BusinessException from 'app/core/BusinessException';
 import { UserManager } from 'app/core/UserManager';
+import { CreateAPIVo, CreateAPIVoRule } from './vo/CreateAPIVo';
 
 @HTTPController({
   path: '/projects',
@@ -97,5 +98,20 @@ export class ProjectController extends AbstractController {
     const currUid = await this.userManager.getAuthorizedUserId(ctx);
     const apis = await this.projectService.getAPIs(currUid, pid);
     return Response.success({ apis });
+  }
+
+  @HTTPMethod({
+    path: '/:pid/apis',
+    method: HTTPMethodEnum.POST,
+  })
+  async createAPI(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPBody() vo: CreateAPIVo,
+  ) {
+    ctx.tValidate(CreateAPIVoRule, vo);
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.createAPI(currUid, pid, vo);
+    return Response.success();
   }
 }

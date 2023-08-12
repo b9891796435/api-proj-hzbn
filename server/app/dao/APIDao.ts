@@ -3,6 +3,7 @@ import { APIMapper } from 'app/mapper/APIMapper';
 import APIBo from './bo/APIBo';
 import { EggLogger } from 'typings/app';
 import { APIHistoryDao } from './APIHistoryDao';
+import APIDto from 'app/service/dto/APIDto';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
@@ -42,5 +43,13 @@ export class APIDao {
     }
     this.logger.info('retrieve APIs by project id', APIs);
     return APIs;
+  }
+
+  async save(pid: bigint, uid: bigint, details: APIDto) {
+    const po = await this.apiMapper.create({
+      pid,
+      deleted: false,
+    });
+    await this.apiHistoryDao.save(po.aid, uid, details);
   }
 }
