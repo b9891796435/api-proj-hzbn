@@ -79,10 +79,8 @@ export class ProjectService extends AbstractService {
   }
 
   async getAPIs(currUid: bigint, pid: bigint) {
-    const user = await this.projectUserDao.findByProjectIdAndUserId(pid, currUid);
-    if (!user) {
-      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
-    }
+    // ignore return value
+    await this.findProjectUserOrThrow(pid, currUid);
     return await this.apiDao.retrieveAPIsByProjectId(pid);
   }
 
@@ -108,6 +106,12 @@ export class ProjectService extends AbstractService {
       throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
     }
     await this.apiDao.update(aid, { deleted: true });
+  }
+
+  async getAPIsInRecycleBin(currUid: bigint, pid: bigint) {
+    // ignore return value
+    await this.findProjectUserOrThrow(pid, currUid);
+    return await this.apiDao.retrieveAPIsByProjectId(pid, { deleted: true });
   }
 
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {

@@ -21,7 +21,7 @@ export class APIDao {
   @Inject()
   private readonly apiHistoryDao: APIHistoryDao;
 
-  async retrieveAPIsByProjectId(pid: bigint) {
+  async retrieveAPIsByProjectId(pid: bigint, options: { deleted: boolean } = { deleted: false }) {
     const modles = await this.apiMapper.find({
       pid,
     });
@@ -31,13 +31,13 @@ export class APIDao {
         aid: bigint;
         deleted: boolean;
       };
-      // 跳过回收站中的 API
-      if (po.deleted) {
+      if (po.deleted === options.deleted) {
         continue;
       }
       const details = await this.apiHistoryDao.findLatestByAid(po.aid);
       const API: APIBo = {
-        ...po,
+        aid: po.aid,
+        deleted: po.deleted,
         details,
       };
       APIs.push(API);
