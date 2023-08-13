@@ -208,6 +208,12 @@ export class ProjectService extends AbstractService {
     return await this.projectUserDao.retrieveProjectsByUserIdAndOffsetAndLimit(currUid, page * pageSize, pageSize);
   }
 
+  async getProject(currUid: bigint, pid: bigint) {
+    // ignore return value
+    await this.findProjectUserOrThrow(pid, currUid);
+    return this.projectDao.findById(pid);
+  }
+
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {
     const po = await this.projectUserDao.findByProjectIdAndUserId(pid, uid);
     this.logger.debug('find project user', po);

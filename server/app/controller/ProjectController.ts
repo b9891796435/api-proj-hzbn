@@ -236,6 +236,19 @@ export class ProjectController extends AbstractController {
 
   @HTTPMethod({
     path: ':pid',
+    method: HTTPMethodEnum.GET,
+  })
+  async getProject(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    const project = await this.projectService.getProject(currUid, pid);
+    return Response.success(project);
+  }
+
+  @HTTPMethod({
+    path: ':pid',
     method: HTTPMethodEnum.PUT,
   })
   async modifyProject(
