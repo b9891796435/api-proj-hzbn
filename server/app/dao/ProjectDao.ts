@@ -29,6 +29,12 @@ export class ProjectDao {
   })
   private readonly apiHistoryMapper: typeof APIHistoryMapper;
 
+  async findById(pid: bigint) {
+    return await this.projectMapper.findOne({
+      pid,
+    });
+  }
+
   async save(name: string) {
     return await this.projectMapper.create({
       name,

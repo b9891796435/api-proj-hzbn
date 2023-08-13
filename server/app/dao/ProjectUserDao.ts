@@ -1,16 +1,15 @@
 import { AccessLevel, SingletonProto, Inject } from '@eggjs/tegg';
-import { EggLogger } from 'egg';
 import { ProjectUserMapper } from 'app/mapper/ProjectUserMapper';
 import ProjectUserPo from 'app/mapper/po/ProjectUserPo';
 import { UserDao } from './UserDao';
 import ProjectUserBo from './bo/ProjectUserBo';
+import { ProjectDao } from './ProjectDao';
+import ProjectDto from 'app/service/dto/ProjectDto';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
 })
 export class ProjectUserDao {
-  @Inject()
-  private readonly logger: EggLogger;
 
   @Inject({
     name: 'ProjectUserMapper',
@@ -19,6 +18,9 @@ export class ProjectUserDao {
 
   @Inject()
   private readonly userDao: UserDao;
+
+  @Inject()
+  private readonly projectDao: ProjectDao;
 
   async retrieveMembersByProjectId(pid: bigint) {
     const modles = await this.projectUserMapper.find({
@@ -34,9 +36,27 @@ export class ProjectUserDao {
         role: po.role,
       });
     }
-    this.logger.info('retrieveMembersByProjectId', members);
     return members;
   }
+
+  async retrieveProjectsByUserIdAndOffsetAndLimit(uid: bigint, offset: number, limit: number) {
+    const count = await this.projectUserMapper.find({ uid }).count();
+    const modles = await this.projectUserMapper
+      .find({
+        uid,
+      })
+      .offset(offset)
+      .limit(limit);
+    const projects: ProjectDto[] = [];
+    for (const modle of modles) {
+      projects.push(await this.projectDao.findById(modle.pid) as ProjectDto);
+    }
+    return {
+      count,
+      projects,
+    };
+  }
+
 
   async findByProjectIdAndUserId(pid: bigint, uid: bigint) {
     const modle = await this.projectUserMapper.findOne({

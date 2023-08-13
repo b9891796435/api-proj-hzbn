@@ -6,6 +6,7 @@ import {
   HTTPMethod,
   HTTPMethodEnum,
   HTTPParam,
+  HTTPQuery,
   Inject,
 } from '@eggjs/tegg';
 import Response, { ResponseCode } from 'app/core/Response';
@@ -217,6 +218,20 @@ export class ProjectController extends AbstractController {
     const currUid = await this.userManager.getAuthorizedUserId(ctx);
     await this.projectService.createProject(currUid, vo.name);
     return Response.success();
+  }
+
+  @HTTPMethod({
+    path: '',
+    method: HTTPMethodEnum.GET,
+  })
+  async getProjects(
+    @Context() ctx: EggContext,
+    @HTTPQuery() page: number,
+    @HTTPQuery() per_page: number,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    const projects = await this.projectService.getProjects(currUid, page, per_page);
+    return Response.success(projects);
   }
 
   @HTTPMethod({
