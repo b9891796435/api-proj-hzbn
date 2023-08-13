@@ -9,6 +9,7 @@ import { APIDao } from 'app/dao/APIDao';
 import APIDto from './dto/APIDto';
 import { APIHistoryDao } from 'app/dao/APIHistoryDao';
 import { UserDao } from 'app/dao/UserDao';
+import { ProjectDao } from 'app/dao/ProjectDao';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
@@ -25,6 +26,9 @@ export class ProjectService extends AbstractService {
 
   @Inject()
   private readonly apiHistoyDao: APIHistoryDao;
+
+  @Inject()
+  private readonly projectDao: ProjectDao;
 
   async getMembers(currUid: bigint, pid: bigint) {
     const members = await this.projectUserDao.retrieveMembersByProjectId(pid);
@@ -169,6 +173,15 @@ export class ProjectService extends AbstractService {
     }
     // 删除 aid 之后的历史记录
     await this.apiHistoyDao.removeWhereTimeGreaterThan(aid, hisotry.time);
+  }
+
+  async createProject(currUid: bigint, name: string) {
+    const project = await this.projectDao.save(name);
+    await this.projectUserDao.save({
+      pid: project.pid,
+      uid: currUid,
+      role: RoleEnum.OWNER,
+    });
   }
 
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {

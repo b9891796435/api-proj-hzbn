@@ -18,6 +18,7 @@ import BusinessException from 'app/core/BusinessException';
 import { UserManager } from 'app/core/UserManager';
 import { CreateAPIVo, CreateAPIVoRule } from './vo/CreateAPIVo';
 import { RestoreAPIHistoryVo, RestoreAPIHistoryVoRule } from './vo/RestoreAPIHistoryVo';
+import { CreateProjectVo, CreateProjectVoRule } from './vo/CreateProjectVo';
 
 @HTTPController({
   path: '/projects',
@@ -201,5 +202,19 @@ export class ProjectController extends AbstractController {
     const currUid = await this.userManager.getAuthorizedUserId(ctx);
     const apis = await this.projectService.restoreAPiHistory(currUid, pid, aid, BigInt(vo.hid));
     return Response.success({ apis });
+  }
+
+  @HTTPMethod({
+    path: '/',
+    method: HTTPMethodEnum.POST,
+  })
+  async createProject(
+    @Context() ctx: EggContext,
+    @HTTPBody() vo: CreateProjectVo,
+  ) {
+    ctx.tValidate(CreateProjectVoRule, vo);
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.createProject(currUid, vo.name);
+    return Response.success();
   }
 }
