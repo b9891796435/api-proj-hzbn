@@ -196,6 +196,14 @@ export class ProjectService extends AbstractService {
     await this.projectDao.update(pid, dto);
   }
 
+  async removeProject(currUid: bigint, pid: bigint) {
+    const modifier = await this.findProjectUserOrThrow(pid, currUid);
+    if (!this.checkUserRoleGreaterEqual(modifier.role, RoleEnum.OWNER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    await this.projectDao.remove(pid);
+  }
+
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {
     const po = await this.projectUserDao.findByProjectIdAndUserId(pid, uid);
     this.logger.debug('find project user', po);

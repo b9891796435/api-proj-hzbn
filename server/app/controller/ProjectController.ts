@@ -233,4 +233,17 @@ export class ProjectController extends AbstractController {
     await this.projectService.modifyProject(currUid, pid, vo);
     return Response.success();
   }
+
+  @HTTPMethod({
+    path: ':pid',
+    method: HTTPMethodEnum.DELETE,
+  })
+  async removeProject(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.removeProject(currUid, pid);
+    return Response.success();
+  }
 }
