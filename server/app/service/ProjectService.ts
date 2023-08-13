@@ -10,6 +10,7 @@ import APIDto from './dto/APIDto';
 import { APIHistoryDao } from 'app/dao/APIHistoryDao';
 import { UserDao } from 'app/dao/UserDao';
 import { ProjectDao } from 'app/dao/ProjectDao';
+import ProjectDto from './dto/ProjectDto';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
@@ -182,6 +183,17 @@ export class ProjectService extends AbstractService {
       uid: currUid,
       role: RoleEnum.OWNER,
     });
+  }
+
+  async modifyProject(currUid: bigint, pid: bigint, dto: Partial<ProjectDto>) {
+    if (!dto.name && !dto.description) {
+      return;
+    }
+    const modifier = await this.findProjectUserOrThrow(pid, currUid);
+    if (!this.checkUserRoleGreaterEqual(modifier.role, RoleEnum.WRITER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    await this.projectDao.update(pid, dto);
   }
 
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {

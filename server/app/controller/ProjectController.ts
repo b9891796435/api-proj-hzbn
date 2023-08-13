@@ -19,6 +19,7 @@ import { UserManager } from 'app/core/UserManager';
 import { CreateAPIVo, CreateAPIVoRule } from './vo/CreateAPIVo';
 import { RestoreAPIHistoryVo, RestoreAPIHistoryVoRule } from './vo/RestoreAPIHistoryVo';
 import { CreateProjectVo, CreateProjectVoRule } from './vo/CreateProjectVo';
+import { ModifyProjectVo, ModifyProjectVoRule } from './vo/ModifyProjectVo';
 
 @HTTPController({
   path: '/projects',
@@ -215,6 +216,21 @@ export class ProjectController extends AbstractController {
     ctx.tValidate(CreateProjectVoRule, vo);
     const currUid = await this.userManager.getAuthorizedUserId(ctx);
     await this.projectService.createProject(currUid, vo.name);
+    return Response.success();
+  }
+
+  @HTTPMethod({
+    path: ':pid',
+    method: HTTPMethodEnum.PUT,
+  })
+  async modifyProject(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPBody() vo: ModifyProjectVo,
+  ) {
+    ctx.tValidate(ModifyProjectVoRule, vo);
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.modifyProject(currUid, pid, vo);
     return Response.success();
   }
 }
