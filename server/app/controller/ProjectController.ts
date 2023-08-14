@@ -6,6 +6,7 @@ import {
   HTTPMethod,
   HTTPMethodEnum,
   HTTPParam,
+  HTTPQuery,
   Inject,
 } from '@eggjs/tegg';
 import Response, { ResponseCode } from 'app/core/Response';
@@ -18,6 +19,8 @@ import BusinessException from 'app/core/BusinessException';
 import { UserManager } from 'app/core/UserManager';
 import { CreateAPIVo, CreateAPIVoRule } from './vo/CreateAPIVo';
 import { RestoreAPIHistoryVo, RestoreAPIHistoryVoRule } from './vo/RestoreAPIHistoryVo';
+import { CreateProjectVo, CreateProjectVoRule } from './vo/CreateProjectVo';
+import { ModifyProjectVo, ModifyProjectVoRule } from './vo/ModifyProjectVo';
 
 @HTTPController({
   path: '/projects',
@@ -201,5 +204,74 @@ export class ProjectController extends AbstractController {
     const currUid = await this.userManager.getAuthorizedUserId(ctx);
     const apis = await this.projectService.restoreAPiHistory(currUid, pid, aid, BigInt(vo.hid));
     return Response.success({ apis });
+  }
+
+  @HTTPMethod({
+    path: '/',
+    method: HTTPMethodEnum.POST,
+  })
+  async createProject(
+    @Context() ctx: EggContext,
+    @HTTPBody() vo: CreateProjectVo,
+  ) {
+    ctx.tValidate(CreateProjectVoRule, vo);
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.createProject(currUid, vo.name);
+    return Response.success();
+  }
+
+  @HTTPMethod({
+    path: '',
+    method: HTTPMethodEnum.GET,
+  })
+  async getProjects(
+    @Context() ctx: EggContext,
+    @HTTPQuery() page: number,
+    @HTTPQuery() per_page: number,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    const projects = await this.projectService.getProjects(currUid, page, per_page);
+    return Response.success(projects);
+  }
+
+  @HTTPMethod({
+    path: ':pid',
+    method: HTTPMethodEnum.GET,
+  })
+  async getProject(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    const project = await this.projectService.getProject(currUid, pid);
+    return Response.success(project);
+  }
+
+  @HTTPMethod({
+    path: ':pid',
+    method: HTTPMethodEnum.PUT,
+  })
+  async modifyProject(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+    @HTTPBody() vo: ModifyProjectVo,
+  ) {
+    ctx.tValidate(ModifyProjectVoRule, vo);
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.modifyProject(currUid, pid, vo);
+    return Response.success();
+  }
+
+  @HTTPMethod({
+    path: ':pid',
+    method: HTTPMethodEnum.DELETE,
+  })
+  async removeProject(
+    @Context() ctx: EggContext,
+    @HTTPParam() pid: bigint,
+  ) {
+    const currUid = await this.userManager.getAuthorizedUserId(ctx);
+    await this.projectService.removeProject(currUid, pid);
+    return Response.success();
   }
 }

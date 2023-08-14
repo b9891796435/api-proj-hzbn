@@ -9,6 +9,8 @@ import { APIDao } from 'app/dao/APIDao';
 import APIDto from './dto/APIDto';
 import { APIHistoryDao } from 'app/dao/APIHistoryDao';
 import { UserDao } from 'app/dao/UserDao';
+import { ProjectDao } from 'app/dao/ProjectDao';
+import ProjectDto from './dto/ProjectDto';
 
 @SingletonProto({
   accessLevel: AccessLevel.PUBLIC,
@@ -25,6 +27,9 @@ export class ProjectService extends AbstractService {
 
   @Inject()
   private readonly apiHistoyDao: APIHistoryDao;
+
+  @Inject()
+  private readonly projectDao: ProjectDao;
 
   async getMembers(currUid: bigint, pid: bigint) {
     const members = await this.projectUserDao.retrieveMembersByProjectId(pid);
@@ -169,6 +174,44 @@ export class ProjectService extends AbstractService {
     }
     // 删除 aid 之后的历史记录
     await this.apiHistoyDao.removeWhereTimeGreaterThan(aid, hisotry.time);
+  }
+
+  async createProject(currUid: bigint, name: string) {
+    const project = await this.projectDao.save(name);
+    await this.projectUserDao.save({
+      pid: project.pid,
+      uid: currUid,
+      role: RoleEnum.OWNER,
+    });
+  }
+
+  async modifyProject(currUid: bigint, pid: bigint, dto: Partial<ProjectDto>) {
+    if (!dto.name && !dto.description) {
+      return;
+    }
+    const modifier = await this.findProjectUserOrThrow(pid, currUid);
+    if (!this.checkUserRoleGreaterEqual(modifier.role, RoleEnum.WRITER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    await this.projectDao.update(pid, dto);
+  }
+
+  async removeProject(currUid: bigint, pid: bigint) {
+    const modifier = await this.findProjectUserOrThrow(pid, currUid);
+    if (!this.checkUserRoleGreaterEqual(modifier.role, RoleEnum.OWNER)) {
+      throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
+    }
+    await this.projectDao.remove(pid);
+  }
+
+  async getProjects(currUid: bigint, page: number, pageSize: number) {
+    return await this.projectUserDao.retrieveProjectsByUserIdAndOffsetAndLimit(currUid, page * pageSize, pageSize);
+  }
+
+  async getProject(currUid: bigint, pid: bigint) {
+    // ignore return value
+    await this.findProjectUserOrThrow(pid, currUid);
+    return this.projectDao.findById(pid);
   }
 
   private async findProjectUserOrThrow(pid: bigint, uid: bigint) {

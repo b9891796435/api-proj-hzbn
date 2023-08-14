@@ -38,7 +38,7 @@ export class APIDao {
         aid: bigint;
         deleted: boolean;
       };
-      if (po.deleted === options.deleted) {
+      if (po.deleted !== options.deleted) {
         continue;
       }
       const details = await this.apiHistoryDao.findLatestByAid(po.aid);
