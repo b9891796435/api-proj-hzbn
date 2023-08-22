@@ -35,45 +35,42 @@
                     </el-button>
                 </template>
             </el-table-column>
+            <template #append>
+                <div style="margin: 4px;">
+                    <el-button link @click="dialogVisible = true">
+                        <el-icon>
+                            <Plus />
+                        </el-icon>
+                        邀请成员
+                    </el-button>
+                </div>
+            </template>
         </el-table>
     </div>
 </template>
 <script lang="ts" setup>
 import { ElMessageBox } from 'element-plus';
-import { ref } from 'vue'
-const members = [
-    {
-        "role": "0",
-        "username": "叶平",
-        "uid": 61
-    },
-    {
-        "role": "1",
-        "username": "袁明",
-        "uid": 83
-    },
-    {
-        "role": "2",
-        "username": "万静",
-        "uid": 91
-    },
-    {
-        "role": "1",
-        "username": "宋艳",
-        "uid": 41
-    },
-    {
-        "role": "0",
-        "username": "乔伟",
-        "uid": 14
-    }
-]
-const roleRender = (role: '0' | '1' | '2' | '3') => {
+import { computed, ref } from 'vue'
+import { apis } from '../../../tools/apis';
+import { useStore } from 'vuex';
+import { ResponseCode } from '../../../types/Response';
+const store = useStore();
+const pid = computed(() => store.state.pid)
+const members = ref<{ role: 0 | 1 | 2 | 3, username: string, uid: number }[]>([])
+const getMembers = () => {
+    apis.Projects.Project.getAllMembers(pid.value as number).then(res => {
+        if (res?.code == ResponseCode.SUCCESS) {
+            members.value = res.data.members
+        }
+    })
+}
+getMembers()
+const roleRender = (role: 0 | 1 | 2 | 3) => {
     switch (role) {
-        case '0': return '可读'
-        case '1': return '可写'
-        case '2': return '管理员'
-        case '3': return '所有者'
+        case 0: return '可读'
+        case 1: return '可写'
+        case 2: return '管理员'
+        case 3: return '所有者'
     }
 }
 const dialogVisible = ref(false);

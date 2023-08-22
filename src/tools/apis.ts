@@ -16,22 +16,23 @@ export const authRequest: (url: string, headers: Headers, init?: RequestInit,) =
         return;
     }
     headers.append('Authorization', auth);
-    return (await fetch(url, { ...init, headers })).json()
+    headers.append('Content-Type', 'application/json')
+    return (await fetch(baseUrl + url, { ...init, headers })).json()
 }
 export const apis = {
     login: async (args: { username: string, password: string }) => {
-        return (await fetch(baseUrl + '/login', { method: 'POST', body: JSON.stringify(args) })).json() as Promise<baseResponse<{
+        return (await fetch(baseUrl + '/login', { method: 'POST', body: JSON.stringify(args), headers: { 'Content-Type': 'application/json' } })).json() as Promise<baseResponse<{
             token: string
         }>>;
     },
     register: async (args: { username: string, password: string }) => {
-        return (await fetch(baseUrl + '/register', { method: 'POST', body: JSON.stringify(args) })).json() as Promise<baseResponse<{
+        return (await fetch(baseUrl + '/register', { method: 'POST', body: JSON.stringify(args), headers: { 'Content-Type': 'application/json' } })).json() as Promise<baseResponse<{
             token: string
         }>>;
     },
     Projects: {
-        getAll: async () => {
-            return authRequest('/projects', new Headers(), { method: 'GET' });
+        getAll: async (args: { page: number, per_page: number }) => {
+            return authRequest(`/projects?page=${args.page}&per_page=${args.per_page}`, new Headers(), { method: 'GET' });
         },
         create: async (args: { name: string }) => {
             return authRequest('/projects', new Headers(), { method: 'POST', body: JSON.stringify(args) });
@@ -53,10 +54,22 @@ export const apis = {
                     })
                 });
             },
+            getBasicInfo: async (pid: number) => {
+                return authRequest(`/projects/${pid}`, new Headers(), { method: 'GET' });
+            },
+            setBasicInfo: async (pid: number, args: {
+                description: string,
+                name: string
+            }) => {
+                return authRequest(`/projects/${pid}`, new Headers(), { method: 'PUT', body: JSON.stringify(args) });
+            },
+            deleteProject: async (pid: number) => {
+                return authRequest(`/projects/${pid}`, new Headers(), { method: 'DELETE' });
+            },
             Interface: {
                 getAll: async (pid: number) => {
                     return authRequest(`/projects/${pid}/apis`, new Headers(), { method: 'GET' });
-                }
+                },
             }
         }
     }
