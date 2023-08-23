@@ -1,14 +1,14 @@
 <template>
     <div id="document">
         <div class="fixed">
-            <el-form :inline="true" :model="formData" class="form-inline" label-position="top">
-                <el-select v-model="formData.method" clearable class="method" style="width: 120px;">
+            <el-form :inline="true" :model="newFormData" class="form-inline" label-position="top">
+                <el-select v-model="newFormData.method" clearable class="method" style="width: 120px;">
                     <el-option style="color: #64a838; font-weight: 600;" label="GET" value="get" />
                     <el-option style="color: #eb913a; font-weight: 600;" label="POST" value="post" />
                     <el-option style="color: #448ef7; font-weight: 600;" label="PUT" value="put" />
                     <el-option style="color: #e76033; font-weight: 600;" label="DELETE" value="delete" />
                 </el-select>
-                <el-input v-model="formData.path" value="/pet/{petId}" clearable class="url" @input="handlePathInput" />
+                <el-input v-model="newFormData.path" value="/pet/{petId}" clearable class="url" @input="handlePathInput" />
 
                 <el-form-item class="button">
                     <el-button class="first" color="#8076c3" size="large" type="primary" @click="onSubmit">保存</el-button>
@@ -25,12 +25,12 @@
 
         <div class="module-detail">
             <div class="title">
-                <el-input v-model="formData.summery" value="查询宠物详情" clearable />
+                <el-input v-model="newFormData.summary" clearable />
             </div>
             <div class="info">
-                <el-form :inline="true" :model="formData" class="form-inline" label-position="top">
+                <el-form :inline="true" :model="newFormData" class="form-inline" label-position="top">
                     <el-form-item label="状态" prop="state">
-                        <el-select value="published" clearable style="width: 330px">
+                        <el-select v-model="newFormData.state" clearable style="width: 330px">
                             <el-option label="已发布" value="published" />
                             <el-option label="测试中" value="testing" />
                             <el-option label="将废弃" value="trash" />
@@ -38,16 +38,14 @@
                         </el-select>
                     </el-form-item>
                     <el-form-item label="责任人">
-                        <!-- <el-input v-model="formData.person" value="Arcobaleno" clearable style="width: 330px" /> -->
-                        <el-input value="Arcobaleno" clearable style="width: 330px" />
+                        <el-input v-model="newFormData.personInCharge" clearable style="width: 330px" />
                     </el-form-item>
                     <el-form-item label="标签">
-                        <!-- <el-input v-model="formData.tags" value="宠物;" clearable style="width: 330px" /> -->
-                        <el-input value="宠物;" clearable style="width: 330px" />
+                        <el-input v-model="newFormData.tags" clearable style="width: 330px" />
                     </el-form-item>
                     <el-form-item label="说明">
-                        <!-- <el-input v-model="formData.description" type="textarea" placeholder="支持MarkDown格式" clearable style="width: 100%" /> -->
-                        <el-input type="textarea" placeholder="支持MarkDown格式" clearable style="width: 100%" />
+                        <el-input v-model="newFormData.description" type="textarea" placeholder="支持MarkDown格式" clearable
+                            style="width: 100%" />
                     </el-form-item>
                 </el-form>
             </div>
@@ -61,8 +59,8 @@
                     <div class="params-container">
                         <div class="subtitle">Query参数</div>
                         <div class="param-form">
-                            <el-table :data="queryData" style="width: 100%" @cell-click="editParams"
-                                :cell-class-name="getCellIndex">
+                            <el-table :data="newFormData.parameters.query" style="width: 100%" @cell-click="editParams"
+                                :row-class-name="getRowIndex">
                                 <el-table-column prop="name" label="参数名" min-width="20%">
                                     <template #default="scope">
                                         <input type="text" v-model="scope.row.name" class="tableCell" placeholder="添加参数" />
@@ -80,7 +78,7 @@
                                 </el-table-column>
                                 <el-table-column prop="desc" label="说明" min-width="35%">
                                     <template #default="scope">
-                                        <input type="text" v-model="scope.row.desc" class="tableCell" />
+                                        <input type="text" v-model="scope.row.description" class="tableCell" />
                                     </template>
                                 </el-table-column>
                                 <el-table-column prop="desc" label="" min-width="10%">
@@ -90,7 +88,7 @@
                         </div>
                         <div class="subtitle">Path参数</div>
                         <div class="param-form non-editable">
-                            <el-table :data="pathData" style="width: 100%" @cell-click="editParams"
+                            <el-table :data="newFormData.parameters.path" style="width: 100%" @cell-click="editParams"
                                 :cell-class-name="getCellIndex">
                                 <el-table-column prop="name" label="参数名" min-width="20%">
                                     <template #default="scope">
@@ -109,7 +107,7 @@
                                 </el-table-column>
                                 <el-table-column prop="desc" label="说明" min-width="35%">
                                     <template #default="scope">
-                                        <input type="text" v-model="scope.row.desc" class="tableCell" />
+                                        <input type="text" v-model="scope.row.description" class="tableCell" />
                                     </template>
                                 </el-table-column>
                                 <el-table-column prop="desc" label="" min-width="10%">
@@ -125,7 +123,7 @@
                 </el-tab-pane>
                 <el-tab-pane label="Cookie">
                     <div class="param-form">
-                        <el-table :data="cookieData" style="width: 100%" @cell-click="editParams"
+                        <el-table :data="newFormData.parameters.cookie" style="width: 100%" @cell-click="editParams"
                             :cell-class-name="getCellIndex">
                             <el-table-column prop="name" label="参数名" min-width="20%">
                                 <template #default="scope">
@@ -144,7 +142,7 @@
                             </el-table-column>
                             <el-table-column prop="desc" label="说明" min-width="35%">
                                 <template #default="scope">
-                                    <input type="text" v-model="scope.row.desc" class="tableCell" />
+                                    <input type="text" v-model="scope.row.description" class="tableCell" />
                                 </template>
                             </el-table-column>
                             <el-table-column prop="desc" label="" min-width="10%">
@@ -155,7 +153,7 @@
                 </el-tab-pane>
                 <el-tab-pane label="Header">
                     <div class="param-form">
-                        <el-table :data="headerData" style="width: 100%" @cell-click="editParams"
+                        <el-table :data="newFormData.parameters.header" style="width: 100%" @cell-click="editParams"
                             :cell-class-name="getCellIndex">
                             <el-table-column prop="name" label="参数名" min-width="20%">
                                 <template #default="scope">
@@ -174,7 +172,7 @@
                             </el-table-column>
                             <el-table-column prop="desc" label="说明" min-width="35%">
                                 <template #default="scope">
-                                    <input type="text" v-model="scope.row.desc" class="tableCell" />
+                                    <input type="text" v-model="scope.row.description" class="tableCell" />
                                 </template>
                             </el-table-column>
                             <el-table-column prop="desc" label="" min-width="10%">
@@ -190,25 +188,26 @@
             <div class="title">返回响应</div>
 
             <el-tabs class="border-card" type="border-card">
-                <el-tab-pane label="成功(200)">
+                <el-tab-pane :label="`${newFormData.responses[0].description}(${newFormData.responses[0].code})`">
                     <div class="response-content">
                         <div class="response-info">
 
-                            <el-form :inline="true" :model="formData" class="form-inline" label-position="right">
+                            <el-form :inline="true" :model="newFormData" class="form-inline" label-position="right">
                                 <el-form-item label="HTTP 状态码">
-                                    <el-input v-model.number="formData.responses[0].code" value="200" clearable
+                                    <el-input v-model.number="newFormData.responses[0].code" value="200" clearable
                                         style="width: 240px" />
                                 </el-form-item>
                                 <el-form-item label="名称">
-                                    <el-input v-model="formData.responses[0].description" value="成功" clearable
+                                    <el-input v-model="newFormData.responses[0].description" value="成功" clearable
                                         style="width: 240px" />
                                 </el-form-item>
                                 <el-form-item label="内容格式">
-                                    <el-select value="json" clearable style="width: 240px">
-                                        <el-option label="JSON" value="json" />
-                                        <el-option label="XML" value="xml" />
-                                        <el-option label="HTML" value="html" />
-                                        <el-option label="Raw" value="raw" />
+                                    <el-select v-model="newFormData.responses[0].content.MIME" clearable
+                                        style="width: 240px">
+                                        <el-option label="JSON" value="application/json" />
+                                        <el-option label="XML" value="application/xml" />
+                                        <el-option label="HTML" value="application/html" />
+                                        <el-option label="Raw" value="application/raw" />
                                     </el-select>
                                 </el-form-item>
                             </el-form>
@@ -221,7 +220,7 @@
                                     </div>
                                 </template>
                                 <div class="structure-content">
-                                    <el-tree :data="dataStructure" :props="defaultProps" @node-click="handleNodeClick" />
+                                    <!-- <el-tree :data="dataStructure" :props="defaultProps" @node-click="handleNodeClick" /> -->
                                 </div>
                             </el-card>
                         </div>
@@ -239,7 +238,7 @@
             <el-tabs class="border-card" type="border-card">
                 <el-tab-pane label="成功实例">
                     <div class="content-example">
-                        <pre>{{ JSON.stringify(responseExample, null, "    ") }}</pre>
+                        <pre>{{ JSON.stringify(newFormData?.responses?.[0]?.content?.example, null, "    ") }}</pre>
                     </div>
                 </el-tab-pane>
                 <el-tab-pane label="异常示例">
@@ -252,7 +251,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, watch, onMounted, computed, getCurrentInstance, nextTick } from 'vue'
+import { ref, reactive, watch, onMounted, getCurrentInstance, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router';
@@ -261,44 +260,24 @@ const instance = getCurrentInstance();
 const store = useStore();
 const router = useRouter();
 
+onMounted(() => {
+    console.log(router.currentRoute.value)
+})
+
+
 const pid = 1;  // 项目标识
 const aid = ref(0);  // api标识
-const oldFormData = computed(() => store.state.apis.projectAPIs?.[0]?.details);
 
-/* 表单数据 */
-const formData = reactive({
-    path: '/pet/{petId}',
-    method: 'get',
-    summery: '查询宠物详情',
-    // state: 'published',
-    // person: 'Arcobaleno',
-    // tags: '宠物;',
-    // description: '',
-    parameters: [
-        {
-            name: 'petId',
-            in: 'path',
-            description: '宠物ID',
-            required: true,
-            schema: {
-                type: 'string'
-            }
-        }
-    ],
-    responses: [
-        {
-            code: 200,
-            description: '成功',
-            content: [
-                {
-                    MIME: 'application/json',
-                    schema: ''
-                }
-            ]
-        }
-    ]
-});
-
+interface paramType {
+    name: string,
+    in: string,
+    type: string,
+    value: any,
+    description: string,
+    required: boolean
+}
+const oldFormData = ref();
+const newFormData = ref();
 let oldFormString: string;
 let newFormString: string;
 let editFormChanged: boolean = false;
@@ -316,68 +295,51 @@ let editFormChanged: boolean = false;
 // };
 
 
-/* 存储解析出的Path参数名 */
-const pathData = ref();
-/* 存储Query参数信息 */
-const queryData = reactive([
-    {
-        name: 'petId',
-        type: 'number',
-        value: 1,
-        desc: '宠物ID'
-    },
-    {
-        name: 'petId',
-        type: 'number',
-        value: 1,
-        desc: '宠物ID'
-    },
-    {
-        name: '',
-        type: '',
-        value: '',
-        desc: ''
-    },
-]);
-/* 存储cookie参数信息 */
-const cookieData = ref();
-/* 存储header参数信息 */
-const headerData = ref();
 let isTableRowEditable: boolean = true;
 
-onMounted(() => {
-    store.dispatch('getProjectAPIs', pid).then(() => {
+
+store.dispatch('getProjectAPIs', pid).then(() => {
+    // 保存初始表单数据
+    newFormData.value = oldFormData.value = store.state.apis.projectAPIs?.[0]?.details;
+    newFormString = oldFormString = JSON.stringify(oldFormData.value);
+    nextTick(() => {
         const methodElement = document.querySelector('.method');
         // 根据接口请求方式使用不同样式
-        methodElement!.className = `method method-${oldFormData.value?.method}`;
-        // 保存初始表单数据
-        newFormString = oldFormString = JSON.stringify(oldFormData.value);
-        // 获得路径中的参数
-        pathData.value = getPathData(formData.path);
-    });
-})
+        methodElement!.className = `method method-${oldFormData.value.method}`;
+        // 监听表单数据是否改变
+        watch(newFormData, (newVal, oldVal) => {
 
-/* 监听表单数据是否改变 */
-watch(formData, (newVal) => {
-    newFormString = JSON.stringify(newVal);
-    if (newFormString === oldFormString) {
-        editFormChanged = false;
-    } else {
-        editFormChanged = true;
-    }
-})
+            newFormString = JSON.stringify(newVal);
+            console.log(newFormString)
+            console.log(oldFormString)
+            console.log(newFormString === oldFormString)
+
+            if (newFormString === oldFormString) {
+                editFormChanged = false;
+            } else {
+                editFormChanged = true;
+            }
+            console.log(editFormChanged)
+        }, {
+            deep: true,
+        })
+    })
+});
+
 
 /* 解析路径中的Path参数 */
-const getPathData = (path: string): Object[] => {
+const getPathData = (path: string): paramType[] => {
     let regexp = /{(\w+?)}/g;
     let params = path.match(regexp)?.map((param) => param.slice(1, param.length - 1));
-    let result: Object[] = [];
+    let result: paramType[] = [];
     params?.forEach(param => {
         result.push({
             name: param,
+            in: 'path',
             type: '',
             value: '',
-            desc: ''
+            description: '',
+            required: true,
         });
     });
     return result;
@@ -385,39 +347,38 @@ const getPathData = (path: string): Object[] => {
 
 /* 处理路径输入事件 */
 const handlePathInput = () => {
-    pathData.value = getPathData(formData.path);
+    newFormData.value.parameters.path = getPathData(newFormData.value.path);
+}
+
+/* 单元格的行列索引赋值 */
+const getRowIndex = (data: any) => {
+    let { row, rowIndex } = data;
+    // 利用单元格的className回调方法给行列索引赋值
+    row.index = rowIndex;
+    return ''+rowIndex;
 }
 
 /* 参数表格可编辑 */
 const editParams = (row, column, cell, event) => {
     if (!isTableRowEditable) return;
-    // 在下一个tick时进行编辑
-    nextTick(() => {
-        const editableCell = cell.getElementsByTagName('input')[0];  // 获取当前单元格的可编辑元素
-        console.log(event)
-        if (editableCell) {
-            editableCell.focus()
-            // 如果点击了最后一列并且输入了数据，则新增一条数据
-            editableCell.addEventListener('input', () => {
-                if (row.index === queryData.length - 1) {
-                    queryData.push({
-                        name: '',
-                        type: '',
-                        value: '',
-                        desc: ''
-                    })
-                }
-            })
-        }
-    })
-}
-
-/* 单元格的行列索引赋值 */
-const getCellIndex = (data: any) => {
-    let { row, column, rowIndex, columnIndex } = data;
-    // 利用单元格的className回调方法给行列索引赋值
-    row.index = rowIndex;
-    column.index = columnIndex;
+    console.log(event.target.parentNode.parentNode)
+    const editableCell = event.target.parentNode;
+    if (editableCell) {
+        editableCell.focus()
+        // 如果点击了最后一列并且输入了数据，则新增一条数据
+        editableCell.addEventListener('input', () => {
+            if (row.index === newFormData.value.parameters.path.length - 1) {
+                newFormData.value.parameters.path.push({
+                    name: '',
+                    in: 'path',
+                    type: '',
+                    value: '',
+                    description: '',
+                    required: true,
+                })
+            }
+        })
+    }
 }
 
 /* 表单提交事件 */
@@ -432,7 +393,7 @@ const onSubmit = async () => {
         //     }
         // })
         // 提交表单
-        newaid = await store.dispatch('updateAPI', { params: { pid, aid: aid.value }, data: formData });
+        newaid = await store.dispatch('updateAPI', { params: { pid, aid: aid.value }, data: newFormData });
     }
 
     // 更新接口id信息
@@ -448,29 +409,6 @@ const handleDelete = () => {
         ElMessage({ message: '已移动到回收站', type: 'success' });
         router.push(`/home`);
     });
-}
-
-/* 存储返回响应的示例 */
-const responseExample = {
-    "code": 0,
-    "data": {
-        "name": "Hello Kity",
-        "photoUrls": [
-            "http://dummyimage.com/400x400"
-        ],
-        "id": 3,
-        "category": {
-            "id": 71,
-            "name": "Cat"
-        },
-        "tags": [
-            {
-                "id": 22,
-                "name": "Cat"
-            }
-        ],
-        "status": "sold"
-    }
 }
 </script>
 

@@ -2,7 +2,7 @@ import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
 
 const routes: Array<RouteRecordRaw> = [
     {
-        path: "/",
+        path: "/apiDetail/projects/:pid/apis/:aid",
         name: "Document",
         component: () => import('@/views/Document/index.vue'),
     },
@@ -15,6 +15,10 @@ const routes: Array<RouteRecordRaw> = [
         path: "/home",
         component: () => import('@/views/Home/index.vue'),
     },
+    {
+        path: '/apilist',
+        component: () => import('@/views/APIList/index.vue'),
+    }
 ]
 
 const router = createRouter({

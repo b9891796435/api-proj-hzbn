@@ -12,7 +12,7 @@
         </div>
 
         <div class="module-detail">
-            <div class="title">{{ apiDetail?.summery }}</div>
+            <div class="title">{{ apiDetail?.summary }}</div>
             <div class="wrapper">
                 <div class="method">{{ apiDetail?.method.toUpperCase() }}</div>
                 <span class="url">{{ apiDetail?.path }}</span>
@@ -49,7 +49,7 @@
                         <el-button class="button" text>生成代码</el-button>
                     </div>
                 </template>
-                <div v-for="(parameter, index) in apiDetail?.parameters" :key="index" class="card__item">
+                <div v-for="(parameter, index) in apiDetail?.parameters?.path" :key="index" class="card__item">
                     <div class="param-detail">
                         <div class="param-name">{{ parameter?.name }}</div>
                         <div class="param-type">{{ parameter?.schema?.type }}</div>
@@ -71,7 +71,7 @@
                         <el-button class="button" text>生成代码</el-button>
                     </div>
                 </template>
-                <div v-for="(parameter, index) in apiDetail?.parameters" :key="index" class="card__item">
+                <div v-for="(parameter, index) in apiDetail?.parameters?.query" :key="index" class="card__item">
                     <div class="param-detail">
                         <div class="param-name">{{ parameter?.name }}</div>
                         <div class="param-type">{{ parameter?.schema?.type }}</div>
