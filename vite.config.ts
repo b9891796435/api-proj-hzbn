@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://zany-robot-9x6rj7w457rcpg4r-7001.preview.app.github.dev',
+        target: 'http://49.233.63.192:7001/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
