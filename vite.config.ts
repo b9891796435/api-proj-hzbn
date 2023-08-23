@@ -23,6 +23,15 @@ export default ({ command }: ConfigEnv): UserConfigExport => {
           replacement: resolve(__dirname, './src'),
         }
       ]
+    },
+    server: {
+      proxy: {
+        '/api': {
+          target: 'https://zany-robot-9x6rj7w457rcpg4r-7001.preview.app.github.dev',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+      }
     }
   }
 }

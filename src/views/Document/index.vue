@@ -201,7 +201,7 @@ const defaultProps = {
 }
 
 const store = useStore();
-const instance = getCurrentInstance();
+// const instance = getCurrentInstance();
 const router = useRouter();
 
 const pid = 1;  // 项目标识
