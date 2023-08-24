@@ -1,80 +1,121 @@
 <template>
+    <!-- <el-container>
+        <el-aside width="256px" style="position: relative;">
+            <el-button type="primary" style="position: absolute;right: 4px;top: 4px;z-index: 10;">新建接口</el-button>
+            <el-table :data="apiData" :row-class-name="tableRowClassName" @row-click="selectAPI">
+                <el-table-column prop="details.method" label="方法" width="84" />
+                <el-table-column prop="details.summary" label="简介" width="172" />
+            </el-table>
+        </el-aside>
+        <el-main>你好</el-main>
+    </el-container> -->
     <div class="api-list">
         <el-card class="box-card">
             <template #header>
                 <div class="card-header">
-                    <span>接口管理（接口{{ apiList.length }}个）</span>
+                    <span>接口管理（接口{{ apiData.length }}个）</span>
+                    <el-button class="button-create" type="primary" color="#8076c3" size="large"
+                        @click="createInterface">新建接口</el-button>
                 </div>
             </template>
             <div class="card-table">
-                <el-table :data="apiList" style="width: 100%" @selection-change="handleSelectionChange">
+                <el-table :data="apiData" style="width: 100%" @selection-change="handleSelectionChange">
                     <el-table-column type="selection" min-width="5%" />
                     <el-table-column prop="summary" label="接口名称" min-width="25%">
-                        <template #default="scope"><span class="skip" @click="showAPIDetail(scope.row.aid)">{{
+                        <template #default="scope"><span class="skip" @click="selectAPI(scope.row)">{{
                             scope.row.details.summary }}</span></template>
                     </el-table-column>
-                    <el-table-column prop="method" label="请求类型" min-width="15%" :filters="typeFilters" :filter-method="typeFilterHandler">
+                    <el-table-column prop="method" label="请求类型" min-width="15%" :filters="typeFilters"
+                        :filter-method="typeFilterHandler">
                         <template #default="scope"><span class="method" :class="`method-${scope.row.details.method}`">{{
                             scope.row.details.method.toUpperCase() }}</span></template>
                     </el-table-column>
                     <el-table-column prop="path" label="接口路径" min-width="15%">
-                        <template #default="scope"><span class="skip" @click="showAPIDetail(scope.row.aid)">{{
+                        <template #default="scope"><span class="skip" @click="selectAPI(scope.row)">{{
                             scope.row.details.path }}</span></template>
                     </el-table-column>
                     <el-table-column prop="group" label="接口分组" min-width="20%">
-                        <template #default="scope"><span>{{ scope.row.details.group }}</span></template>
+                        <template #default="scope"><span>项目A</span></template>
                     </el-table-column>
                     <el-table-column prop="state" label="接口状态" min-width="20%">
-                        <template #default="scope"><span>{{ scope.row.details.state }}</span></template>
+                        <template #default="scope"><span>开发中</span></template>
                     </el-table-column>
                 </el-table>
-                <el-button class="button-delete" :class="{ disabled: deleteList.length === 0}" color="#8076c3" size="large" type="primary" @click="handleDelete">删除</el-button>
+                <el-button class="button-delete" color="#8076c3" size="large"
+                    type="primary" @click="handleDelete">删除</el-button>
             </div>
         </el-card>
     </div>
 </template>
-
 <script lang="ts" setup>
-import { computed, onMounted, reactive } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { APItem } from '@/types/apis';
+import { storeMutation } from '@/constant/store.ts';
+import { apis } from '@/tools/apis.ts';
+import { ResponseCode } from '@/types/Response.ts';
+import { ROUTE } from '@/constant/route.ts'
 
 const store = useStore();
 const router = useRouter();
 
-const pid = 1;
-const apiList = computed(() => store.state.apis.projectAPIs);
+const curPid = computed(() => store.state.pid);
+const apiData = ref<APItem[]>([])
 
 const typeFilters = [
-    {text:'GET', value: 'GET'},
-    {text:'POST', value: 'POST'},
-    {text:'PUT', value: 'PUT'},
-    {text:'DELETE', value: 'DELETE'},
+    { text: 'GET', value: 'GET' },
+    { text: 'POST', value: 'POST' },
+    { text: 'PUT', value: 'PUT' },
+    { text: 'DELETE', value: 'DELETE' },
 ];
 
 let deleteList: number[] = reactive([]);
 
 /* 获取当前项目的所有接口数据 */
-const getData = () => {
-    store.dispatch('getProjectAPIs', pid);
+const getApis = () => {
+    store.dispatch('getAll', store.state.pid as number).then(() => {
+        apiData.value = store.state.apis.projectAPIs;
+    })
 }
 
-onMounted(() => {
-    getData();
+watch(curPid, (newVal) => {
+    router.push({
+        name: ROUTE.INTERFACE_MANAGEMENT,
+        params: {
+            pid: newVal
+        }
+    });
+    getApis();
 })
 
-/* 单元格的行列索引赋值 */
-const getRowIndex = (data: any) => {
-    let { row, rowIndex } = data;
-    // 利用单元格的className回调方法给行列索引赋值
-    row.index = rowIndex;
-    return '' + rowIndex;
+onMounted(() => {
+    if (store.state.pid) {
+        getApis();
+    }
+})
+
+/* 新建接口 */
+const createInterface = () => {
+    router.push({
+        name: ROUTE.INTERFACE_CREATE,
+        params: {
+            pid: store.state.pid
+        }
+    })
 }
 
-/* 参数表格可编辑 */
-const showAPIDetail = (aid: number) => {
-    router.push(`/apiDetail/projects/${pid}/apis/${aid}`);
+/* 选择接口 */
+const selectAPI = (row: APItem) => {
+    store.commit(storeMutation.SELECT_INTERFACE, { aid: row.aid });
+    router.push({
+        name: ROUTE.DOCUMENT_TABS,
+        params: {
+            pid: store.state.pid,
+            aid: row.aid
+        }
+    })
 }
 
 /* 设置请求类型的过滤方法 */
@@ -90,18 +131,23 @@ const handleSelectionChange = (value: any) => {
 
 /* 处理删除事件 */
 const handleDelete = () => {
-    let deletePromisesList = deleteList.map((aid: number) => store.dispatch('deleteAPI', { pid, aid }));
-    console.log(deletePromisesList)
+    if (!deleteList.length) return;
+    let deletePromisesList = deleteList.map((aid: number) => {
+        apis.Projects.Project.Interface.deleteInterface(store.state.pid as number, aid as number);
+    });
     Promise.all(deletePromisesList).then(() => {
         ElMessage({ message: '选中的接口已全部移动到回收站', type: 'success' });
-        getData();
+        getApis();
     }).catch(err => {
-        ElMessage({ message: '删除时发生错误', type: 'error' });
+        ElMessage({ message: err, type: 'error' });
     })
 }
 </script>
-
 <style lang="less">
+.APIRowSelected {
+    --el-table-tr-bg-color: var(--el-border-color-dark);
+}
+
 .api-list {
     .method {
         font-weight: 600;
@@ -125,21 +171,30 @@ const handleDelete = () => {
 
     .disabled {
         cursor: default;
-        pointer-events:none;
+        pointer-events: none;
         opacity: 0.7;
     }
 
     .el-card {
         position: relative;
-        
-        .el-button.button-delete {
+
+        .el-button.button-delete,
+        .el-button.button-create {
             color: white;
+        }
+
+        .el-button.button-delete {
             margin: 10px 0;
             float: right;
         }
+
         .card-header {
             font-size: 22px;
             font-weight: 500;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .card-table {

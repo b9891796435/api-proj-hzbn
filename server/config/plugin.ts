@@ -29,6 +29,10 @@ const plugin: EggPlugin = {
     enable: true,
     package: 'egg-tracer',
   },
+  typeboxValidate: {
+    enable: true,
+    package: 'egg-typebox-validate',
+  },
   teggOrm: {
     enable: true,
     package: '@eggjs/tegg-orm-plugin',

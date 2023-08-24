@@ -2,13 +2,14 @@
     <div id="document">
         <div class="fixed">
             <el-form :inline="true" :model="newFormData" class="form-inline" label-position="top">
-                <el-select v-model="newFormData.method" clearable class="method" style="width: 120px;">
+                <el-select v-model="newFormData.method" clearable class="method method-get" style="width: 120px;">
                     <el-option style="color: #64a838; font-weight: 600;" label="GET" value="get" />
                     <el-option style="color: #eb913a; font-weight: 600;" label="POST" value="post" />
                     <el-option style="color: #448ef7; font-weight: 600;" label="PUT" value="put" />
                     <el-option style="color: #e76033; font-weight: 600;" label="DELETE" value="delete" />
                 </el-select>
-                <el-input v-model="newFormData.path" value="/pet/{petId}" clearable class="url" @input="handlePathInput" />
+                <el-input v-model="newFormData.path" placeholder='接口路径，"/"起始' value="/pet/{petId}" clearable class="url"
+                    @input="handlePathInput" />
 
                 <el-form-item class="button">
                     <el-button class="first" color="#8076c3" size="large" type="primary" @click="onSubmit">保存</el-button>
@@ -25,9 +26,9 @@
 
         <div class="module-detail">
             <div class="title">
-                <el-input v-model="newFormData.summary" clearable />
+                <el-input v-model="newFormData.summary" placeholder="未命名接口" clearable />
             </div>
-            <div class="info">
+            <!-- <div class="info">
                 <el-form :inline="true" :model="newFormData" class="form-inline" label-position="top">
                     <el-form-item label="状态" prop="state">
                         <el-select v-model="newFormData.state" clearable style="width: 330px">
@@ -48,7 +49,7 @@
                             style="width: 100%" />
                     </el-form-item>
                 </el-form>
-            </div>
+            </div> -->
         </div>
 
         <div class="module-params">
@@ -59,8 +60,8 @@
                     <div class="params-container">
                         <div class="subtitle">Query参数</div>
                         <div class="param-form">
-                            <el-table :data="newFormData.parameters.query" style="width: 100%" @cell-click="editParams"
-                                :row-class-name="getRowIndex">
+                            <el-table :data="newFormData.parameters.filter(param => param.in === 'query')"
+                                style="width: 100%" @cell-click="editParams" :row-class-name="getRowIndex">
                                 <el-table-column prop="name" label="参数名" min-width="20%">
                                     <template #default="scope">
                                         <input type="text" v-model="scope.row.name" class="tableCell" placeholder="添加参数" />
@@ -68,7 +69,7 @@
                                 </el-table-column>
                                 <el-table-column prop="type" label="类型" min-width="15%">
                                     <template #default="scope">
-                                        <input type="text" v-model="scope.row.type" class="tableCell" />
+                                        <input type="text" v-model="scope.row.schema.type" class="tableCell" />
                                     </template>
                                 </el-table-column>
                                 <el-table-column prop="value" label="示例值" min-width="20%">
@@ -88,8 +89,8 @@
                         </div>
                         <div class="subtitle">Path参数</div>
                         <div class="param-form non-editable">
-                            <el-table :data="newFormData.parameters.path" style="width: 100%" @cell-click="editParams"
-                                :cell-class-name="getCellIndex">
+                            <el-table :data="pathParams"
+                                style="width: 100%" @cell-click="editParams" :row-class-name="getRowIndex">
                                 <el-table-column prop="name" label="参数名" min-width="20%">
                                     <template #default="scope">
                                         <input type="text" v-model="scope.row.name" class="tableCell" disabled />
@@ -97,7 +98,7 @@
                                 </el-table-column>
                                 <el-table-column prop="type" label="类型" min-width="15%">
                                     <template #default="scope">
-                                        <input type="text" v-model="scope.row.type" class="tableCell" />
+                                        <input type="text" v-model="scope.row.schema.type" class="tableCell" />
                                     </template>
                                 </el-table-column>
                                 <el-table-column prop="value" label="示例值" min-width="20%">
@@ -119,12 +120,12 @@
 
                 </el-tab-pane>
                 <el-tab-pane label="Body">
-                    记录不存在(404)
+                    请求体
                 </el-tab-pane>
-                <el-tab-pane label="Cookie">
+                <!-- <el-tab-pane label="Cookie">
                     <div class="param-form">
-                        <el-table :data="newFormData.parameters.cookie" style="width: 100%" @cell-click="editParams"
-                            :cell-class-name="getCellIndex">
+                        <el-table :data="newFormData.parameters.filter(param => param.in === 'cookie')" style="width: 100%" @cell-click="editParams"
+                            :row-class-name="getRowIndex">
                             <el-table-column prop="name" label="参数名" min-width="20%">
                                 <template #default="scope">
                                     <input type="text" v-model="scope.row.name" class="tableCell" placeholder="添加参数" />
@@ -150,11 +151,11 @@
                             </el-table-column>
                         </el-table>
                     </div>
-                </el-tab-pane>
+                </el-tab-pane> -->
                 <el-tab-pane label="Header">
                     <div class="param-form">
-                        <el-table :data="newFormData.parameters.header" style="width: 100%" @cell-click="editParams"
-                            :cell-class-name="getCellIndex">
+                        <el-table :data="newFormData.parameters.filter(param => param.in === 'header')" style="width: 100%"
+                            @cell-click="editParams" :row-class-name="getRowIndex">
                             <el-table-column prop="name" label="参数名" min-width="20%">
                                 <template #default="scope">
                                     <input type="text" v-model="scope.row.name" class="tableCell" placeholder="添加参数" />
@@ -162,7 +163,7 @@
                             </el-table-column>
                             <el-table-column prop="type" label="类型" min-width="15%">
                                 <template #default="scope">
-                                    <input type="text" v-model="scope.row.type" class="tableCell" />
+                                    <input type="text" v-model="scope.row.schema.type" class="tableCell" />
                                 </template>
                             </el-table-column>
                             <el-table-column prop="value" label="示例值" min-width="20%">
@@ -202,12 +203,10 @@
                                         style="width: 240px" />
                                 </el-form-item>
                                 <el-form-item label="内容格式">
-                                    <el-select v-model="newFormData.responses[0].content.MIME" clearable
+                                    <el-select v-model="newFormData.responses[0].content[0].MIME" clearable
                                         style="width: 240px">
                                         <el-option label="JSON" value="application/json" />
-                                        <el-option label="XML" value="application/xml" />
-                                        <el-option label="HTML" value="application/html" />
-                                        <el-option label="Raw" value="application/raw" />
+                                        <el-option label="XML" value="text/xml" />
                                     </el-select>
                                 </el-form-item>
                             </el-form>
@@ -251,22 +250,24 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, watch, onMounted, getCurrentInstance, nextTick } from 'vue'
+import { ref, reactive, watch, onMounted, getCurrentInstance, nextTick, computed } from 'vue'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router';
+import { APItem } from '@/types/apis.ts';
+import { apis } from '@/tools/apis.ts';
+import { storeMutation } from '@/constant/store.ts';
+import { ROUTE } from '@/constant/route.ts'
 
 const instance = getCurrentInstance();
 const store = useStore();
 const router = useRouter();
 
 onMounted(() => {
-    console.log(router.currentRoute.value)
+    
 })
 
-
-const pid = 1;  // 项目标识
-const aid = ref(0);  // api标识
+const aid = computed(() => router.currentRoute.value.params.apis || undefined);  // api标识
 
 interface paramType {
     name: string,
@@ -277,10 +278,186 @@ interface paramType {
     required: boolean
 }
 const oldFormData = ref();
-const newFormData = ref();
+// const newFormData = ref<APIHistory>();
+// const newFormData = ref({
+//     path: '/pet/{petId}',
+//     method: 'get',
+//     summary: '查询宠物详情',
+//     state: 'published',
+//     personInCharge: 'Arcobaleno',
+//     personModify: 'Arcobaleno',
+//     personCreate: 'Arcobaleno',
+//     tags: '宠物;',
+//     description: '由宠物ID获得宠物详情',
+//     parameters: {
+//         query: [
+//             {
+//                 name: 'key1',
+//                 in: 'path',
+//                 type: 'integer',
+//                 value: '1',
+//                 description: '宠物ID',
+//                 required: true
+//             },
+//             {
+//                 name: 'key2',
+//                 in: 'path',
+//                 type: 'string',
+//                 value: 'value',
+//                 description: '宠物ID',
+//                 required: true
+//             }
+//         ],
+//         path: [
+//             {
+//                 name: 'petId',
+//                 in: 'path',
+//                 type: 'integer',
+//                 value: '1',
+//                 description: '宠物ID',
+//                 required: true
+//             },
+//         ],
+//         body: [],
+//         cookie: [],
+//         header: [],
+//     },
+//     responses: [
+//         {
+//             code: 200,
+//             description: '成功',
+//             content: {
+//                 MIME: 'application/json',
+//                 schema: '',
+//                 example: {
+//                     "code": 0,
+//                     "data": {
+//                         "name": "Hello Kity",
+//                         "photoUrls": [
+//                             "http://dummyimage.com/400x400"
+//                         ],
+//                         "id": 3,
+//                         "category": {
+//                             "id": 71,
+//                             "name": "Cat"
+//                         },
+//                         "tags": [
+//                             {
+//                                 "id": 22,
+//                                 "name": "Cat"
+//                             }
+//                         ],
+//                         "status": "sold"
+//                     }
+//                 }
+//             }
+//         }
+//     ]
+// });
+
+const newFormData = ref({
+    "path": "/projects/{pid}/apis",
+    "summary": "新建接口",
+    "parameters": [
+        {
+            "name": "pid",
+            "in": "path",
+            "description": "众团好马",
+            "required": true,
+            "schema": {
+                "type": "number"
+            }
+        },
+        {
+            "name": "qr",
+            "in": "query",
+            "description": "即断真经行低",
+            "required": false,
+            "schema": {
+                "type": "string"
+            }
+        },
+        {
+            "name": "hd",
+            "in": "header",
+            "description": "说出府关现场",
+            "required": true,
+            "schema": {
+                "type": "string"
+            }
+        }
+    ],
+    "method": "POST",
+    "responses": [
+        {
+            "code": 200,
+            "description": "成功",
+            "content": [
+                {
+                    "MIME": "application/json",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "宠物名",
+                                "example": "Hello Kitty"
+                            },
+                            "status": {
+                                "type": "string",
+                                "description": "宠物销售状态",
+                                "example": "sold"
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "status"
+                        ]
+                    }
+                },
+                {
+                    "MIME": "text/xml",
+                    "schema": "est magna fugiat occaecat amet"
+                },
+                {
+                    "MIME": "application/x-yaml",
+                    "schema": "esse sunt in ex"
+                },
+                {
+                    "MIME": "multipart/form-data",
+                    "schema": "ullamco incididunt"
+                }
+            ]
+        },
+        {
+            "code": 400,
+            "description": "参数错误",
+            "content": [
+                {
+                    "MIME": "ad aute laboris deserunt",
+                    "schema": "eiusmod pariatur sit adipisicing dolore"
+                },
+                {
+                    "MIME": "mollit officia magna ut Duis",
+                    "schema": "laboris"
+                },
+                {
+                    "MIME": "enim ea",
+                    "schema": "anim"
+                },
+                {
+                    "MIME": "est",
+                    "schema": "sunt in Lorem Excepteur"
+                }
+            ]
+        }
+    ]
+})
 let oldFormString: string;
 let newFormString: string;
 let editFormChanged: boolean = false;
+
+let pathParams = [];
 
 // 表单校验规则
 // const rules = {
@@ -290,41 +467,12 @@ let editFormChanged: boolean = false;
 //             message: '请输入接口概述',
 //             trigger: 'blur'
 //         }
-//     ],
-
+//     ]
 // };
 
-
 let isTableRowEditable: boolean = true;
-
-
-store.dispatch('getProjectAPIs', pid).then(() => {
-    // 保存初始表单数据
-    newFormData.value = oldFormData.value = store.state.apis.projectAPIs?.[0]?.details;
-    newFormString = oldFormString = JSON.stringify(oldFormData.value);
-    nextTick(() => {
-        const methodElement = document.querySelector('.method');
-        // 根据接口请求方式使用不同样式
-        methodElement!.className = `method method-${oldFormData.value.method}`;
-        // 监听表单数据是否改变
-        watch(newFormData, (newVal, oldVal) => {
-
-            newFormString = JSON.stringify(newVal);
-            console.log(newFormString)
-            console.log(oldFormString)
-            console.log(newFormString === oldFormString)
-
-            if (newFormString === oldFormString) {
-                editFormChanged = false;
-            } else {
-                editFormChanged = true;
-            }
-            console.log(editFormChanged)
-        }, {
-            deep: true,
-        })
-    })
-});
+/* 获取当前页面类型，新建/编辑 */
+const editType = computed(() => router.currentRoute.value.params.aid !== undefined);
 
 
 /* 解析路径中的Path参数 */
@@ -336,10 +484,11 @@ const getPathData = (path: string): paramType[] => {
         result.push({
             name: param,
             in: 'path',
-            type: '',
-            value: '',
             description: '',
             required: true,
+            schema: {
+                type: ''
+            }
         });
     });
     return result;
@@ -347,7 +496,36 @@ const getPathData = (path: string): paramType[] => {
 
 /* 处理路径输入事件 */
 const handlePathInput = () => {
-    newFormData.value.parameters.path = getPathData(newFormData.value.path);
+    pathParams = getPathData(newFormData.value.path);
+}
+
+if (!editType.value) {
+    editFormChanged = true;
+} else {
+    store.state.apis.projectAPIs.forEach(api => {
+        if (api.aid == router.currentRoute.value.params.aid) {
+            newFormData.value = oldFormData.value = api.details;
+            pathParams = getPathData(newFormData.value.path);
+        }
+    })
+    nextTick(() => {
+        const methodElement = document.querySelector('.method');
+        // 根据接口请求方式使用不同样式
+        methodElement!.className = `method method-${oldFormData.value.method}`;
+        // 监听表单数据是否改变
+        watch(newFormData, (newVal) => {
+
+            newFormString = JSON.stringify(newVal);
+
+            if (newFormString === oldFormString) {
+                editFormChanged = false;
+            } else {
+                editFormChanged = true;
+            }
+        }, {
+            deep: true,
+        })
+    })
 }
 
 /* 单元格的行列索引赋值 */
@@ -355,7 +533,7 @@ const getRowIndex = (data: any) => {
     let { row, rowIndex } = data;
     // 利用单元格的className回调方法给行列索引赋值
     row.index = rowIndex;
-    return ''+rowIndex;
+    return '' + rowIndex;
 }
 
 /* 参数表格可编辑 */
@@ -367,14 +545,15 @@ const editParams = (row, column, cell, event) => {
         editableCell.focus()
         // 如果点击了最后一列并且输入了数据，则新增一条数据
         editableCell.addEventListener('input', () => {
-            if (row.index === newFormData.value.parameters.path.length - 1) {
-                newFormData.value.parameters.path.push({
+            if (row.index === newFormData.value.parameters.filter(param => param.in === 'query').length - 1) {
+                newFormData.value.parameters.push({
                     name: '',
-                    in: 'path',
-                    type: '',
-                    value: '',
+                    in: 'query',
                     description: '',
                     required: true,
+                    schema: {
+                        type: ''
+                    }
                 })
             }
         })
@@ -383,7 +562,7 @@ const editParams = (row, column, cell, event) => {
 
 /* 表单提交事件 */
 const onSubmit = async () => {
-    let newaid: number = aid.value;
+    let newaid: number | undefined = parseInt(router.currentRoute.value.params.apis as string) || undefined;
     if (editFormChanged) {
         // 校验表单
         // const formRef = instance?.refs.form;
@@ -392,12 +571,26 @@ const onSubmit = async () => {
 
         //     }
         // })
+
+        newFormData.value.parameters = newFormData.value.parameters.filter(param => param.in !== 'path').concat(pathParams);
+
         // 提交表单
-        newaid = await store.dispatch('updateAPI', { params: { pid, aid: aid.value }, data: newFormData });
+        if (!editType.value) {
+            newaid = await store.dispatch('createInterface', { params: { pid: store.state.pid }, data: newFormData.value });
+        } else {
+            newaid = await store.dispatch('updateInterface', { params: { pid: store.state.pid, aid: aid.value }, data: newFormData });
+        }
     }
 
-    // 更新接口id信息
-    aid.value = newaid;
+    // 更新接口id信息并跳转
+    store.commit(storeMutation.SELECT_INTERFACE, { aid: newaid })
+    router.push({
+        name: ROUTE.INTERFACE_DOCUMENT,
+        params: {
+            pid: store.state.pid,
+            aid: newaid
+        }
+    })
     // 保存修改的接口数据
     oldFormString = newFormString;
     ElMessage({ message: '保存成功！', type: 'success' });
@@ -405,7 +598,7 @@ const onSubmit = async () => {
 
 /* 接口删除事件 */
 const handleDelete = () => {
-    store.dispatch('deleteAPI', { pid, aid: aid.value }).then(() => {
+    store.dispatch('deleteAPI', { pid: store.state.pid, aid: aid.value }).then(() => {
         ElMessage({ message: '已移动到回收站', type: 'success' });
         router.push(`/home`);
     });
@@ -416,6 +609,7 @@ const handleDelete = () => {
 #document {
     font-size: 18px;
     padding: 20px;
+    height: 100vh;
 
     .title {
         font-size: 22px;
@@ -430,10 +624,10 @@ const handleDelete = () => {
     }
 
     .fixed {
-        position: fixed;
+        position: sticky;
         top: 0;
         z-index: 100;
-        width: calc(100% - 40px);
+        width: calc(100% - 20px);
         height: 76px;
         background-color: white;
         display: flex;
@@ -485,7 +679,7 @@ const handleDelete = () => {
 
 
     .module-detail {
-        margin-top: 80px;
+        margin-top: 20px;
 
         .tags {
             .tag__item {
@@ -553,61 +747,63 @@ const handleDelete = () => {
             }
         }
 
+        .param-form {
+            .tableCell {
+                box-sizing: border-box;
+                border: none;
+                outline: none;
+            }
+
+            .el-table {
+                :deep(.el-table__inner-wrapper) {
+                    box-sizing: border-box;
+                    border: 1px solid #eaeaea;
+                    border-radius: 8px;
+
+                }
+
+                :deep(.el-table__inner-wrapper::before) {
+                    content: none;
+                }
+
+                :deep(.el-table__body .el-table__row:last-child) {
+                    .el-button {
+                        display: none;
+                    }
+                }
+
+                :deep(.el-table__body .el-table__cell:last-child:hover) {
+                    box-sizing: border-box;
+                    border: 1px solid transparent;
+                }
+
+                :deep(.el-table__body .el-table__cell) {
+                    box-sizing: border-box;
+                    border: 1px solid transparent;
+                    border-bottom: 1px solid #eaeaea;
+                }
+
+                :deep(.el-table__body .el-table__cell:hover) {
+                    border: 1px solid #847ac9;
+                }
+
+                :deep(.el-table__body .el-table__cell:focus) {
+                    border: 1px solid #847ac9;
+                }
+
+                :deep(.el-table__body .el-table__cell input) {
+                    width: 100%;
+                }
+            }
+        }
+
         .params-container {
 
             .subtitle {
                 line-height: 56px;
             }
 
-            .param-form {
-                .tableCell {
-                    box-sizing: border-box;
-                    border: none;
-                    outline: none;
-                }
 
-                .el-table {
-                    :deep(.el-table__inner-wrapper) {
-                        box-sizing: border-box;
-                        border: 1px solid #eaeaea;
-                        border-radius: 8px;
-
-                    }
-
-                    :deep(.el-table__inner-wrapper::before) {
-                        content: none;
-                    }
-
-                    :deep(.el-table__body .el-table__row:last-child) {
-                        .el-button {
-                            display: none;
-                        }
-                    }
-
-                    :deep(.el-table__body .el-table__cell:last-child:hover) {
-                        box-sizing: border-box;
-                        border: 1px solid transparent;
-                    }
-
-                    :deep(.el-table__body .el-table__cell) {
-                        box-sizing: border-box;
-                        border: 1px solid transparent;
-                        border-bottom: 1px solid #eaeaea;
-                    }
-
-                    :deep(.el-table__body .el-table__cell:hover) {
-                        border: 1px solid #847ac9;
-                    }
-
-                    :deep(.el-table__body .el-table__cell:focus) {
-                        border: 1px solid #847ac9;
-                    }
-
-                    :deep(.el-table__body .el-table__cell input) {
-                        width: 100%;
-                    }
-                }
-            }
 
             .non-editable {
                 .el-table {

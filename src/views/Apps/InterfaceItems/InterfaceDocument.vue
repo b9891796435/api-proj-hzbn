@@ -16,23 +16,23 @@
             <div class="wrapper">
                 <div class="method">{{ apiDetail?.method.toUpperCase() }}</div>
                 <span class="url">{{ apiDetail?.path }}</span>
-                <div class="state">已发布</div>
+                <!-- <div class="state">已发布</div> -->
             </div>
-            <div class="tags">
+            <!-- <div class="tags">
                 <div class="tag__item">宠物</div>
-            </div>
+            </div> -->
             <div class="info">
-                <span class="thin">创建时间</span><span class="info__item">2023年7月27日</span>
-                <span class="thin">修改时间</span><span class="info__item">7天前</span>
+                <!-- <span class="thin">创建时间</span><span class="info__item">2023年7月27日</span> -->
+                <span class="thin">修改时间</span><span class="info__item">{{ timeFormat(apiDetail?.time) }}</span>
                 <span class="thin">修改者</span><span class="info__item">Arcobaleno</span>
-                <span class="thin">创建者</span><span class="info__item">Arcobaleno</span>
-                <span class="thin">责任人</span><span class="info__item">未设置</span>
-                <span class="thin">目录</span><span class="info__item">示例项目</span>
+                <!-- <span class="thin">创建者</span><span class="info__item">Arcobaleno</span> -->
+                <!-- <span class="thin">责任人</span><span class="info__item">未设置</span> -->
+                <!-- <span class="thin">目录</span><span class="info__item">示例项目</span> -->
             </div>
-            <div class="description">
+            <!-- <div class="description">
                 <div class="title">接口说明</div>
                 <div class="content">XXXXXXXXX</div>
-            </div>
+            </div> -->
         </div>
 
         <div class="module-mock">
@@ -42,14 +42,14 @@
         <div class="module-params">
             <div class="title">请求参数</div>
 
-            <el-card class="box-card">
+            <el-card class="box-card" v-if="pathParams?.length != 0">
                 <template #header>
                     <div class="card-header">
                         <span>Path参数</span>
                         <el-button class="button" text>生成代码</el-button>
                     </div>
                 </template>
-                <div v-for="(parameter, index) in apiDetail?.parameters?.path" :key="index" class="card__item">
+                <div v-for="(parameter, index) in pathParams" :key="index" class="card__item">
                     <div class="param-detail">
                         <div class="param-name">{{ parameter?.name }}</div>
                         <div class="param-type">{{ parameter?.schema?.type }}</div>
@@ -57,21 +57,21 @@
                             '可选' }}</div>
                     </div>
                     <p class="param-desc">{{ parameter?.description }}</p>
-                    <p class="param-case">
+                    <!-- <p class="param-case">
                         示例值：
                         <span class="value">1</span>
-                    </p>
+                    </p> -->
                 </div>
             </el-card>
 
-            <el-card class="box-card">
+            <el-card class="box-card" v-if="queryParams?.length != 0">
                 <template #header>
                     <div class="card-header">
                         <span>Query参数</span>
                         <el-button class="button" text>生成代码</el-button>
                     </div>
                 </template>
-                <div v-for="(parameter, index) in apiDetail?.parameters?.query" :key="index" class="card__item">
+                <div v-for="(parameter, index) in queryParams" :key="index" class="card__item">
                     <div class="param-detail">
                         <div class="param-name">{{ parameter?.name }}</div>
                         <div class="param-type">{{ parameter?.schema?.type }}</div>
@@ -79,10 +79,10 @@
                             '可选' }}</div>
                     </div>
                     <p class="param-desc">{{ parameter?.description }}</p>
-                    <p class="param-case">
+                    <!-- <p class="param-case">
                         示例值：
                         <span class="value">1</span>
-                    </p>
+                    </p> -->
                 </div>
             </el-card>
 
@@ -186,6 +186,8 @@ import { ref, reactive, computed, onMounted, getCurrentInstance } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { APIHistory, APItem } from '@/types/apis'
+import { ROUTE } from '@/constant/route.ts'
 
 interface Tree {
     label: string,
@@ -204,28 +206,63 @@ const store = useStore();
 // const instance = getCurrentInstance();
 const router = useRouter();
 
-const pid = 1;  // 项目标识
-const aid = 0;  // api标识
-const apiDetail = computed(() => store.state.apis.projectAPIs?.[0]?.details);
+const apiDetail = ref<APIHistory>();
+const pathParams = computed(() => apiDetail.value?.parameters.filter(param => param.in === 'path'));
+const queryParams = computed(() => apiDetail.value?.parameters.filter(param => param.in === 'query'));
+const headerParams = computed(() => apiDetail.value?.parameters.filter(param => param.in === 'header'));
 
 onMounted(() => {
-    store.dispatch('getProjectAPIs', pid).then(() => {
-        const methodElement = document.querySelector('.method');
-        methodElement!.className = `method method-${apiDetail.value?.method}`;
-    });
+    store.state.apis.projectAPIs.forEach(api => {
+        if (api.aid == router.currentRoute.value.params.aid) {
+            apiDetail.value = api.details;
+            const methodElement = document.querySelector('.method');
+            methodElement!.className = `method method-${apiDetail.value?.method.toLowerCase()}`; 
+        }
+    })
 })
 
 /* 接口删除事件 */
 const handleDelete = () => {
-    store.dispatch('deleteAPI', { pid, aid }).then(() => {
+    store.dispatch('deleteInterface', { pid: store.state.pid, aid: store.state.aid }).then(() => {
         ElMessage({ message: '已移动到回收站', type: 'success' });
-        router.push(`/home`);
+        router.push({ 
+            name: ROUTE.INTERFACE_MANAGEMENT,
+            params: {
+                pid: store.state.pid
+            }
+        });
     });
 }
 
 /* 数据结构节点点击事件 */
 const handleNodeClick = (data: Tree) => {
     console.log(data);
+}
+
+/* 转换时间格式 */
+const timeFormat = (rawTime) => {
+    const dateObj = new Date(rawTime);
+    const curTime = new Date();
+
+    let seconds = Math.floor((curTime.getTime() - dateObj.getTime()) / 1000);
+    let minutes = Math.floor(seconds / 60);
+    seconds %= 60;
+    let hours = Math.floor(minutes / 60);
+    minutes %= 60;
+    let days = Math.floor(hours / 24);
+    hours %= 24;
+
+    if (days >= 7) {
+        return `${dateObj.getFullYear()}年${dateObj.getMonth()}月${dateObj.getDate()}日`;
+    } else if (days > 0) {
+        return `${days}天前`;
+    } else if (hours > 0) {
+        return `${hours}小时前`;
+    } else if (minutes > 0) {
+        return `${minutes}分钟前`;
+    } else {
+        return `${seconds}秒前`;
+    }
 }
 
 /* 存储返回响应的数据结构 */
@@ -336,6 +373,7 @@ const responseExample = {
 #document {
     font-size: 18px;
     padding: 20px;
+    position: relative;
 
     .title {
         font-size: 22px;
@@ -351,8 +389,11 @@ const responseExample = {
     }
 
     .fixed {
-        width: 90%;
-        position: fixed;
+        z-index: 100;
+        width: 100%;
+        position: absolute;
+        top: 10px;
+        right: 20px;
         display: flex;
         justify-content: flex-end;
 

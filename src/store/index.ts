@@ -1,16 +1,23 @@
 import { createStore } from 'vuex'
-import apis, { APIState } from './apis/index.ts'
+import apis from './apis/index.ts'
 
 
-/* 定义根级State类型 */
-export type RootState = {
-    apis: APIState
-}
-
-const store = createStore<RootState>({
+export default createStore({
+    state() {
+        return {
+            pid: null,
+            aid: null
+        }
+    },
+    mutations: {
+        selectProject(state, payload) {
+            state.pid = payload.pid
+        },
+        selectInterface(state, payload) {
+            state.aid = payload.aid
+        }
+    },
     modules: {
         apis,
     }
 })
-
-export default store;
