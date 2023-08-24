@@ -1,4 +1,6 @@
 import { createStore } from 'vuex'
+import apis from './apis/index.ts'
+
 
 export default createStore({
     state() {
@@ -14,5 +16,8 @@ export default createStore({
         selectInterface(state, payload) {
             state.aid = payload.aid
         }
+    },
+    modules: {
+        apis,
     }
 })

@@ -2,6 +2,7 @@ import { OAUTH } from "../constant/login";
 import { ElMessage } from 'element-plus';
 import router from "../router";
 import baseResponse from '../types/Response'
+import { APItem } from "@/types/apis";
 let baseUrl = 'http://localhost:5173/api'
 export const authRequest: (url: string, headers: Headers, init?: RequestInit,) => null | Promise<baseResponse<any>> = async (url, headers, init?) => {
     const auth = localStorage.getItem(OAUTH.TOKEN);
@@ -70,6 +71,15 @@ export const apis = {
                 getAll: async (pid: number) => {
                     return authRequest(`/projects/${pid}/apis`, new Headers(), { method: 'GET' });
                 },
+                updateInterface: async (pid: number, aid: number, args: APItem) => {
+                    return authRequest(`/projects/${pid}/apis/${aid}`, new Headers(), { method: 'PUT', body: JSON.stringify(args)});
+                },
+                deleteInterface: async (pid: number, aid: number) => {
+                    return authRequest(`/projects/${pid}/apis/${aid}`, new Headers(), { method: 'DELETE' });
+                },
+                createInterface: async (pid: number, args: APItem) => {
+                    return authRequest(`/projects/${pid}/apis`, new Headers(), { method: 'POST', body: JSON.stringify(args) });
+                }
             }
         }
     }

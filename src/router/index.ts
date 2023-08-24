@@ -5,6 +5,9 @@ import InterfaceManagement from "../views/Apps/InterfaceManagement.vue";
 import ProjectSetting from '../views/Apps/ProjectSetting.vue';
 import MembersManagement from "../views/Apps/SettingItems/MembersManagement.vue";
 import ProjectManagement from "../views/Apps/SettingItems/ProjectManagement.vue";
+import InterfaceDocument from '../views/Apps/InterfaceItems/InterfaceDocument.vue';
+import InterfaceEdit from '../views/Apps/InterfaceItems/InterfaceEdit.vue';
+import DocumentTabs from '../views/Apps/DocumentTabs.vue';
 import { ROUTE } from '../constant/route'
 
 const routes: Array<RouteRecordRaw> = [
@@ -18,10 +21,33 @@ const routes: Array<RouteRecordRaw> = [
         name: ROUTE.MAIN_APP,
         component: MainApp,
         children: [{
-            path: '',
-            name: 'InterfaceManagement',
-            component: InterfaceManagement
+            path: 'InterfaceManagement/projects/:pid?',
+            name: ROUTE.INTERFACE_MANAGEMENT,
+            component: InterfaceManagement,
         }, {
+            path: 'InterfaceCreate',
+            name: ROUTE.INTERFACE_CREATE,
+            component: InterfaceEdit,
+        }, {
+            path: 'DocumentTabs/projects/:pid?/apis/:aid',
+            name: ROUTE.DOCUMENT_TABS,
+            component: DocumentTabs,
+            redirect: {
+                name: ROUTE.INTERFACE_DOCUMENT
+            },
+            children: [
+                {
+                    path: 'InterfaceDocument',
+                    name: ROUTE.INTERFACE_DOCUMENT,
+                    component: InterfaceDocument,
+                }, {
+                    path: 'InterfaceEdit',
+                    name: ROUTE.INTERFACE_EDIT,
+                    component: InterfaceEdit,
+                }
+            ]
+        },
+        {
             path: 'ProjectSetting',
             name: ROUTE.PROJECT_SETTING,
             component: ProjectSetting,
@@ -34,8 +60,8 @@ const routes: Array<RouteRecordRaw> = [
                 name: ROUTE.PROJECT_MANAGEMENT,
                 component: ProjectManagement
             }]
-        },]
-    },
+        }]
+    }
 ]
 
 const router = createRouter({

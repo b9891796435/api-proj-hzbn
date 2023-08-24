@@ -1,13 +1,25 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { resolve } from 'path'
+import { viteMockServe } from 'vite-plugin-mock'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue()
+  ],
+  resolve: {
+    alias: [
+      {
+        find: '@',
+        replacement: resolve(__dirname, './src'),
+      }
+    ]
+  },
   server: {
     proxy: {
       '/api': {
-        target: 'https://zany-robot-9x6rj7w457rcpg4r-7001.preview.app.github.dev',
+        target: 'http://49.233.63.192:7001/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
