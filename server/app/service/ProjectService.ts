@@ -98,7 +98,12 @@ export class ProjectService extends AbstractService {
     if (!user || !this.checkUserRoleGreaterEqual(user.role, RoleEnum.WRITER)) {
       throw new BusinessException(ResponseCode.FORBIDDEN, '无权限');
     }
-    await this.apiDao.save(pid, currUid, API);
+    const api = await this.apiDao.save(pid, currUid, API);
+    return {
+      aid: api.aid,
+      hid: api.hid,
+      uid: api.uid,
+    };
   }
 
   async modifyAPI(currUid: bigint, pid: bigint, aid: bigint, API: APIDto) {
@@ -183,6 +188,11 @@ export class ProjectService extends AbstractService {
       uid: currUid,
       role: RoleEnum.OWNER,
     });
+    return {
+      pid: project.pid,
+      name: project.name,
+      description: project.description,
+    };
   }
 
   async modifyProject(currUid: bigint, pid: bigint, dto: Partial<ProjectDto>) {

@@ -58,7 +58,7 @@ export class APIDao {
       pid,
       deleted: false,
     });
-    await this.apiHistoryDao.save(po.aid, uid, details);
+    return await this.apiHistoryDao.save(po.aid, uid, details);
   }
 
   async update(aid: bigint, update: Partial<APIPo>) {

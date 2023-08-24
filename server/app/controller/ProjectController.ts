@@ -115,8 +115,8 @@ export class ProjectController extends AbstractController {
   ) {
     ctx.tValidate(CreateAPIVoRule, vo);
     const currUid = await this.userManager.getAuthorizedUserId(ctx);
-    await this.projectService.createAPI(currUid, pid, vo);
-    return Response.success();
+    const api = await this.projectService.createAPI(currUid, pid, vo);
+    return Response.success(api);
   }
 
   @HTTPMethod({
@@ -216,8 +216,8 @@ export class ProjectController extends AbstractController {
   ) {
     ctx.tValidate(CreateProjectVoRule, vo);
     const currUid = await this.userManager.getAuthorizedUserId(ctx);
-    await this.projectService.createProject(currUid, vo.name);
-    return Response.success();
+    const project = await this.projectService.createProject(currUid, vo.name);
+    return Response.success(project);
   }
 
   @HTTPMethod({

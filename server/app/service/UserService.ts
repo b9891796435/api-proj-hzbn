@@ -32,7 +32,12 @@ export class UserService extends AbstractService {
     userDto.password = passwordIntegrity;
 
     try {
-      return await this.userDao.save(userDto, salt);
+      const user = await this.userDao.save(userDto, salt);
+      this.logger.info('register user: %s', user.username);
+      return {
+        uid: user.uid,
+        username: user.username,
+      };
     } catch {
       throw new BusinessException(
         ResponseCode.DUPLICATE_RESOURCE,
@@ -54,6 +59,8 @@ export class UserService extends AbstractService {
     this.saveUserToRedis(token, userBo);
     return {
       token,
+      uid: userBo.uid,
+      username: userBo.username,
     };
   }
 

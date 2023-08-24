@@ -26,8 +26,8 @@ export class UserController extends AbstractController {
   async register(@Context() ctx: EggContext, @HTTPBody() userVo: UserVo) {
     this.logger.info('register user: %s', userVo.username);
     ctx.tValidate(UserVoRule, userVo);
-    await this.userService.register(userVo);
-    return Response.success();
+    const user = await this.userService.register(userVo);
+    return Response.success(user);
   }
 
   @HTTPMethod({

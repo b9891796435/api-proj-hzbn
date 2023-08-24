@@ -29,7 +29,7 @@ export class APIHistoryDao {
   }
 
   async save(aid: bigint, uid: bigint, details: APIDto) {
-    await this.apiHisotryMapper.create({
+    return await this.apiHisotryMapper.create({
       ...details,
       aid,
       uid,
