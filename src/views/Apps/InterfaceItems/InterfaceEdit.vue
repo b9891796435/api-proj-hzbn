@@ -13,11 +13,11 @@
 
                 <el-form-item class="button">
                     <el-button class="first" color="#8076c3" size="large" type="primary" @click="onSubmit">保存</el-button>
-                    <el-button size="large">运行</el-button>
+                    <el-button size="large" v-if="editType">运行</el-button>
                     <el-popconfirm title="确认删除该接口？" width="170" confirm-button-text="确定" cancel-button-text="取消"
                         @confirm="handleDelete">
                         <template #reference>
-                            <el-button size="large">删除</el-button>
+                            <el-button size="large" v-if="editType">删除</el-button>
                         </template>
                     </el-popconfirm>
                 </el-form-item>
@@ -60,8 +60,8 @@
                     <div class="params-container">
                         <div class="subtitle">Query参数</div>
                         <div class="param-form">
-                            <el-table :data="newFormData.parameters.filter(param => param.in === 'query')"
-                                style="width: 100%" @cell-click="editParams" :row-class-name="getRowIndex">
+                            <el-table :data="queryParams" style="width: 100%" @cell-click="editParams"
+                                :row-class-name="getRowIndex">
                                 <el-table-column prop="name" label="参数名" min-width="20%">
                                     <template #default="scope">
                                         <input type="text" v-model="scope.row.name" class="tableCell" placeholder="添加参数" />
@@ -83,14 +83,16 @@
                                     </template>
                                 </el-table-column>
                                 <el-table-column prop="desc" label="" min-width="10%">
-                                    <el-button>删除</el-button>
+                                    <template #default="scope">
+                                        <el-button @click="deleteParam(scope.row.name)">删除</el-button>
+                                    </template>
                                 </el-table-column>
                             </el-table>
                         </div>
                         <div class="subtitle">Path参数</div>
                         <div class="param-form non-editable">
-                            <el-table :data="pathParams"
-                                style="width: 100%" @cell-click="editParams" :row-class-name="getRowIndex">
+                            <el-table :data="pathParams" style="width: 100%" @cell-click="editParams"
+                                :row-class-name="getRowIndex">
                                 <el-table-column prop="name" label="参数名" min-width="20%">
                                     <template #default="scope">
                                         <input type="text" v-model="scope.row.name" class="tableCell" disabled />
@@ -154,8 +156,8 @@
                 </el-tab-pane> -->
                 <el-tab-pane label="Header">
                     <div class="param-form">
-                        <el-table :data="newFormData.parameters.filter(param => param.in === 'header')" style="width: 100%"
-                            @cell-click="editParams" :row-class-name="getRowIndex">
+                        <el-table :data="headerParams" style="width: 100%" @cell-click="editParams"
+                            :row-class-name="getRowIndex">
                             <el-table-column prop="name" label="参数名" min-width="20%">
                                 <template #default="scope">
                                     <input type="text" v-model="scope.row.name" class="tableCell" placeholder="添加参数" />
@@ -177,7 +179,9 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="desc" label="" min-width="10%">
-                                <el-button>删除</el-button>
+                                <template #default="scope">
+                                    <el-button @click="deleteParam(scope.row.name)">删除</el-button>
+                                </template>
                             </el-table-column>
                         </el-table>
                     </div>
@@ -264,7 +268,7 @@ const store = useStore();
 const router = useRouter();
 
 onMounted(() => {
-    
+
 })
 
 const aid = computed(() => router.currentRoute.value.params.apis || undefined);  // api标识
@@ -272,10 +276,11 @@ const aid = computed(() => router.currentRoute.value.params.apis || undefined); 
 interface paramType {
     name: string,
     in: string,
-    type: string,
-    value: any,
     description: string,
-    required: boolean
+    required: boolean,
+    schema: {
+        type: string
+    }
 }
 const oldFormData = ref();
 // const newFormData = ref<APIHistory>();
@@ -457,7 +462,29 @@ let oldFormString: string;
 let newFormString: string;
 let editFormChanged: boolean = false;
 
-let pathParams = [];
+let pathParams = ref<paramType[]>([]);
+let queryParams = computed(() => {
+    return newFormData.value.parameters.filter(param => param.in === 'query').concat({
+        "name": "",
+        "in": "query",
+        "description": "",
+        "required": false,
+        "schema": {
+            "type": ""
+        }
+    });
+});
+let headerParams = computed(() => {
+    return newFormData.value.parameters.filter(param => param.in === 'header').concat({
+        "name": "",
+        "in": "header",
+        "description": "",
+        "required": false,
+        "schema": {
+            "type": ""
+        }
+    });
+});
 
 // 表单校验规则
 // const rules = {
@@ -496,16 +523,19 @@ const getPathData = (path: string): paramType[] => {
 
 /* 处理路径输入事件 */
 const handlePathInput = () => {
-    pathParams = getPathData(newFormData.value.path);
+    pathParams.value = getPathData(newFormData.value.path);
 }
 
 if (!editType.value) {
     editFormChanged = true;
+    // 初始化path参数列表
+    handlePathInput();
 } else {
     store.state.apis.projectAPIs.forEach(api => {
         if (api.aid == router.currentRoute.value.params.aid) {
             newFormData.value = oldFormData.value = api.details;
-            pathParams = getPathData(newFormData.value.path);
+            // 初始化path参数列表
+            handlePathInput();
         }
     })
     nextTick(() => {
@@ -539,13 +569,12 @@ const getRowIndex = (data: any) => {
 /* 参数表格可编辑 */
 const editParams = (row, column, cell, event) => {
     if (!isTableRowEditable) return;
-    console.log(event.target.parentNode.parentNode)
     const editableCell = event.target.parentNode;
     if (editableCell) {
         editableCell.focus()
         // 如果点击了最后一列并且输入了数据，则新增一条数据
         editableCell.addEventListener('input', () => {
-            if (row.index === newFormData.value.parameters.filter(param => param.in === 'query').length - 1) {
+            if (row.in === 'query' && row.index === queryParams.value.length - 1) {
                 newFormData.value.parameters.push({
                     name: '',
                     in: 'query',
@@ -556,8 +585,25 @@ const editParams = (row, column, cell, event) => {
                     }
                 })
             }
+            if (row.in === 'header' && row.index === headerParams.value.length - 1) {
+                newFormData.value.parameters.push({
+                    name: '',
+                    in: 'header',
+                    description: '',
+                    required: true,
+                    schema: {
+                        type: ''
+                    }
+                })
+            }
         })
     }
+}
+
+/* 删除参数事件 */
+const deleteParam = (deleteParamName: string) => {
+    const deleteIndex = newFormData.value.parameters.findIndex(param => param.name === deleteParamName);
+    newFormData.value.parameters.splice(deleteIndex, 1);
 }
 
 /* 表单提交事件 */
@@ -572,7 +618,7 @@ const onSubmit = async () => {
         //     }
         // })
 
-        newFormData.value.parameters = newFormData.value.parameters.filter(param => param.in !== 'path').concat(pathParams);
+        newFormData.value.parameters = newFormData.value.parameters.filter(param => param.in !== 'path' || !param.name).concat(pathParams.value);
 
         // 提交表单
         if (!editType.value) {
@@ -598,9 +644,14 @@ const onSubmit = async () => {
 
 /* 接口删除事件 */
 const handleDelete = () => {
-    store.dispatch('deleteAPI', { pid: store.state.pid, aid: aid.value }).then(() => {
+    store.dispatch('deleteInterface', { pid: store.state.pid, aid: store.state.aid }).then(() => {
         ElMessage({ message: '已移动到回收站', type: 'success' });
-        router.push(`/home`);
+        router.push({
+            name: ROUTE.INTERFACE_MANAGEMENT,
+            params: {
+                pid: store.state.pid
+            }
+        });
     });
 }
 </script>
@@ -609,7 +660,6 @@ const handleDelete = () => {
 #document {
     font-size: 18px;
     padding: 20px;
-    height: 100vh;
 
     .title {
         font-size: 22px;
