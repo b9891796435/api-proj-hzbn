@@ -21,13 +21,13 @@
                             @click.prevent="store.commit(storeMutation.SELECT_PROJECT, { pid: scope.row.pid })">
                             选择
                         </el-button>
-                        <el-button link type="primary" size="small" @click.prevent="console.log(scope)">
+                        <el-button link type="primary" size="small" @click.prevent="deleteProject(scope.row.pid)">
                             删除
                         </el-button>
                     </template>
                 </el-table-column>
                 <template #append>
-                    <div style="margin: 4px;">
+                    <div style="margin: 4px;text-align: center;">
                         <el-button link @click="dialogVisible = true">
                             <el-icon>
                                 <Plus />
@@ -45,7 +45,7 @@
 import { computed, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { storeMutation } from '../../constant/store';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { apis } from '../../tools/apis';
 import { ResponseCode } from '../../types/Response';
 const store = useStore();
@@ -63,6 +63,8 @@ const getProjs = (page: number = 0) => {
         if (res?.code == ResponseCode.SUCCESS) {
             projs.value = res.data.projects;
             count.value = res.data.count
+        } else {
+            ElMessage.error(res?.message);
         }
     })
 }
@@ -72,7 +74,7 @@ watch(() => props.value, () => {
         getProjs()
     }
 })
-watch(() => currPid, (value) => {
+watch(() => currPid.value, (value) => {
     if (value == null) {
         drawerState.value = true;
         getProjs()
@@ -86,7 +88,23 @@ const handleNewProject = () => {
             ElMessage.success('创建成功');
             dialogVisible.value = false;
             getProjs(0);
+        } else {
+            ElMessage.error(res?.message);
         }
+    })
+}
+const deleteProject = (pid: number) => {
+    ElMessageBox.confirm('该选项将会删除本项目，无法撤销，是否确定？').then(() => {
+        return ElMessageBox.confirm('该选项无法撤销，请再次确认')
+    }).then(() => {
+        apis.Projects.Project.deleteProject(pid).then(res => {
+            if (res?.code == ResponseCode.SUCCESS) {
+                ElMessage.success('删除成功');
+                store.commit(storeMutation.SELECT_PROJECT, { pid: null });
+            } else {
+                ElMessage.error(res?.message);
+            }
+        })
     })
 }
 getProjs();

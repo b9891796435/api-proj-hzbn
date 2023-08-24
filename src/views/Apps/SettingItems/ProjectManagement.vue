@@ -57,6 +57,8 @@ const getInfo = () => {
                 res.data.description = '';
             }
             detail.value = res.data
+        } else {
+            ElMessage.error(res?.message);
         }
     })
 }
@@ -80,6 +82,8 @@ const setInfo = () => {
             ElMessage.success('修改成功');
             getInfo();
             dialogVisible.value = false;
+        } else {
+            ElMessage.error(res?.message);
         }
     })
 }
@@ -91,6 +95,8 @@ const deleteProject = () => {
             if (res?.code == ResponseCode.SUCCESS) {
                 ElMessage.success('删除成功');
                 store.commit(storeMutation.SELECT_PROJECT, { pid: null });
+            } else {
+                ElMessage.error(res?.message);
             }
         })
     })

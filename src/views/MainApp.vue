@@ -3,7 +3,12 @@
         <select-project :value="drawer"></select-project>
         <el-container>
             <el-header height="32px">
-                会者不难API管理平台
+                <div>
+                    会者不难API管理平台
+                </div>
+                <div class="userProfile">
+                    <div>UID:{{ uid }}</div>
+                </div>
             </el-header>
             <el-container style="border-top: solid #00000022 1px;">
                 <el-aside width="84px">
@@ -48,6 +53,7 @@ import router from '../router';
 import SelectProject from './Apps/SelectProject.vue';
 import { OAUTH } from '../constant/login'
 import { ROUTE } from '../constant/route'
+const uid = localStorage.getItem(OAUTH.UID);
 const goSetting = () => {
     router.push({ name: ROUTE.MEMBERS_MANAGEMENT })
 }
@@ -65,11 +71,20 @@ onBeforeRouteUpdate((to, _from, next) => {//Rust的不使用变量语法怎么�
 })
 const drawer = ref(false);
 </script>
-<style scoped>
+<style scoped lang="less">
 header {
+    display: flex;
     text-align: left;
     font-size: 24px;
-    margin: 0 0 16px;
+    margin: 8px 0 8px;
+    align-items: center;
+}
+.userProfile{
+    display: flex;
+    margin-left: auto;
+    div{
+        margin: 0 8px;
+    }
 }
 
 .menu {
@@ -78,6 +93,7 @@ header {
     border-right: solid #00000022 1px;
     min-height: calc(100vh - 48px);
     background-color: #F9FAFB;
+    text-align: center;
 }
 
 .menu>* {

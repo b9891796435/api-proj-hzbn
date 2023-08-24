@@ -59,7 +59,7 @@
                 </template>
             </el-table-column>
             <template #append>
-                <div style="margin: 4px;">
+                <div style="margin: 4px; text-align: center;">
                     <el-button link @click="handleInvite">
                         <el-icon>
                             <Plus />
@@ -84,6 +84,8 @@ const getMembers = () => {
     apis.Projects.Project.getAllMembers(pid.value as number).then(res => {
         if (res?.code == ResponseCode.SUCCESS) {
             members.value = res.data.members
+        } else {
+            ElMessage.error(res?.message);
         }
     })
 }
@@ -117,6 +119,8 @@ const commitEditRole = () => {
         if (res?.code == ResponseCode.SUCCESS) {
             ElMessage.success('修改成功');
             getMembers();
+        } else {
+            ElMessage.error(res?.message);
         }
     })
 }
@@ -136,6 +140,8 @@ const commitInvite = () => {
     apis.Projects.Project.inviteMember(pid.value, Number(inviteForm.value.uid), inviteForm.value.role).then(res => {
         if (res?.code == ResponseCode.SUCCESS) {
             ElMessage.success('邀请成功')
+        } else {
+            ElMessage.error(res?.message);
         }
     })
 }
