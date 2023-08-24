@@ -36,14 +36,12 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { apis } from '../../../tools/apis';
 import { ResponseCode } from '../../../types/Response';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { storeMutation } from '../../../constant/store';
-import router from '../../../router';
-import { ROUTE } from '../../../constant/route';
 
 const store = useStore();
 const pid = computed(() => store.state.pid)
@@ -62,6 +60,9 @@ const getInfo = () => {
         }
     })
 }
+watch(() => pid.value, () => {
+    getInfo();
+})
 getInfo();
 const dialogVisible = ref(false)
 const infoForm = ref({
@@ -90,7 +91,6 @@ const deleteProject = () => {
             if (res?.code == ResponseCode.SUCCESS) {
                 ElMessage.success('删除成功');
                 store.commit(storeMutation.SELECT_PROJECT, { pid: null });
-                router.push({ name: ROUTE.MAIN_APP })
             }
         })
     })

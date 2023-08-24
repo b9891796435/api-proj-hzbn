@@ -11,7 +11,7 @@
                 </span>
             </template>
         </el-dialog>
-        <el-drawer :model-value="drawer" title="选择项目" direction='ltr'
+        <el-drawer :model-value="drawerState" title="选择项目" direction='ltr'
             :before-close="(done) => { if (currPid != null) drawerState = !drawerState; else ElMessage.error('请选择要使用的项目'); done(true) }">
             <el-table :data="projs">
                 <el-table-column prop="name" label="名称" />
@@ -42,7 +42,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { storeMutation } from '../../constant/store';
 import { ElMessage } from 'element-plus';
@@ -55,8 +55,7 @@ const drawerState = ref(false)
 if (currPid.value == null) {
     drawerState.value = true;
 }
-const xor = (a: boolean, b: boolean) => (a && !b) || (!a && b);//取异或保证props或自带的drawer中任意一个变化即可对drawer
-const drawer = computed(() => xor(props.value, drawerState.value))
+
 const projs = ref<{ name: string, pid: number }[]>([])
 const count = ref(0);
 const getProjs = (page: number = 0) => {
@@ -67,6 +66,18 @@ const getProjs = (page: number = 0) => {
         }
     })
 }
+watch(() => props.value, () => {
+    if (drawerState.value == false) {
+        drawerState.value = true;
+        getProjs()
+    }
+})
+watch(() => currPid, (value) => {
+    if (value == null) {
+        drawerState.value = true;
+        getProjs()
+    }
+})
 const dialogVisible = ref(false);
 const newProjectName = ref('');
 const handleNewProject = () => {
