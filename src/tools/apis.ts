@@ -79,7 +79,13 @@ export const apis = {
                 },
                 createInterface: async (pid: number, args: APItem) => {
                     return authRequest(`/projects/${pid}/apis`, new Headers(), { method: 'POST', body: JSON.stringify(args) });
-                }
+                },
+                getHistory: async (pid: number, aid: number) => {
+                    return authRequest(`/projects/${pid}/apis/${aid}/history`, new Headers(), { method: 'GET' });
+                },
+                recoverHistory: async (pid: number, aid: number, hid: number) => {
+                    return authRequest(`/projects/${pid}/apis/${aid}/history`, new Headers(), { method: 'PUT', body: JSON.stringify({ hid }) });
+                },
             }
         }
     }
