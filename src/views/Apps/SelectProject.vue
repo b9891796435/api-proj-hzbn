@@ -11,7 +11,7 @@
                 </span>
             </template>
         </el-dialog>
-        <el-drawer :model-value="drawer" title="选择项目" direction='ltr'
+        <el-drawer :model-value="drawerState" title="选择项目" direction='ltr'
             :before-close="(done) => { if (currPid != null) drawerState = !drawerState; else ElMessage.error('请选择要使用的项目'); done(true) }">
             <el-table :data="projs">
                 <el-table-column prop="name" label="名称" />
@@ -21,13 +21,13 @@
                             @click.prevent="store.commit(storeMutation.SELECT_PROJECT, { pid: scope.row.pid })">
                             选择
                         </el-button>
-                        <el-button link type="primary" size="small" @click.prevent="console.log(scope)">
+                        <el-button link type="primary" size="small" @click.prevent="deleteProject(scope.row.pid)">
                             删除
                         </el-button>
                     </template>
                 </el-table-column>
                 <template #append>
-                    <div style="margin: 4px;">
+                    <div style="margin: 4px;text-align: center;">
                         <el-button link @click="dialogVisible = true">
                             <el-icon>
                                 <Plus />
@@ -42,10 +42,10 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { storeMutation } from '../../constant/store';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { apis } from '../../tools/apis';
 import { ResponseCode } from '../../types/Response';
 const store = useStore();
@@ -55,8 +55,7 @@ const drawerState = ref(false)
 if (currPid.value == null) {
     drawerState.value = true;
 }
-const xor = (a: boolean, b: boolean) => (a && !b) || (!a && b);//取异或保证props或自带的drawer中任意一个变化即可对drawer
-const drawer = computed(() => xor(props.value, drawerState.value))
+
 const projs = ref<{ name: string, pid: number }[]>([])
 const count = ref(0);
 const getProjs = (page: number = 0) => {
@@ -64,9 +63,23 @@ const getProjs = (page: number = 0) => {
         if (res?.code == ResponseCode.SUCCESS) {
             projs.value = res.data.projects;
             count.value = res.data.count
+        } else {
+            ElMessage.error(res?.message);
         }
     })
 }
+watch(() => props.value, () => {
+    if (drawerState.value == false) {
+        drawerState.value = true;
+        getProjs()
+    }
+})
+watch(() => currPid.value, (value) => {
+    if (value == null) {
+        drawerState.value = true;
+        getProjs()
+    }
+})
 const dialogVisible = ref(false);
 const newProjectName = ref('');
 const handleNewProject = () => {
@@ -75,7 +88,23 @@ const handleNewProject = () => {
             ElMessage.success('创建成功');
             dialogVisible.value = false;
             getProjs(0);
+        } else {
+            ElMessage.error(res?.message);
         }
+    })
+}
+const deleteProject = (pid: number) => {
+    ElMessageBox.confirm('该选项将会删除本项目，无法撤销，是否确定？').then(() => {
+        return ElMessageBox.confirm('该选项无法撤销，请再次确认')
+    }).then(() => {
+        apis.Projects.Project.deleteProject(pid).then(res => {
+            if (res?.code == ResponseCode.SUCCESS) {
+                ElMessage.success('删除成功');
+                store.commit(storeMutation.SELECT_PROJECT, { pid: null });
+            } else {
+                ElMessage.error(res?.message);
+            }
+        })
     })
 }
 getProjs();
