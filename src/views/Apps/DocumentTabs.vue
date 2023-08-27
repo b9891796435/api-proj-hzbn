@@ -17,12 +17,23 @@
         </el-tab-pane>
     </el-tabs>
     <el-drawer v-model="historyDrawerVisible" title="查看历史版本" direction="rtl" size="30%">
-        <el-table :data="historyInfo" @row-click="recoverHistory">
+        <el-table :data="historyInfo" @row-click="handleHistoryClick">
             <el-table-column property="hid" label="版本ID" />
             <el-table-column property="username" label="修改者" />
             <el-table-column property="time" label="修改时间" />
         </el-table>
     </el-drawer>
+    <el-dialog v-model="recoverDialogVisible" title="提示" width="30%">
+        <span>确认恢复至该历史版本吗？</span>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="recoverDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="recoverHistory">
+                    确认
+                </el-button>
+            </span>
+        </template>
+    </el-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -43,6 +54,8 @@ const store = useStore();
 
 const activeTab = ref(ROUTE.INTERFACE_DOCUMENT);
 const historyDrawerVisible = ref(false);
+const recoverDialogVisible = ref(false);
+const recoverRow = ref();
 const historyInfo = ref<History[]>([]);
 
 const timeFormat = (rawTime) => {
@@ -98,14 +111,22 @@ const openHistory = () => {
     historyDrawerVisible.value = true;
 }
 
+/* 点击历史版本事件 */
+const handleHistoryClick = (row) => {
+    recoverDialogVisible.value = true;
+    recoverRow.value = row;
+}
+
 /* 历史版本回滚事件 */
-const recoverHistory = (row) => {
+const recoverHistory = () => {
+    let row = recoverRow.value;
     store.dispatch('recoverHistory', { pid: store.state.pid, aid: store.state.aid, hid: row.hid }).then(() => {
         ElMessage({ message: `已恢复至历史版本，当前历史版本标识：${row.hid}`, type: 'success' });
         getHistory();
     }).catch(() => {
         ElMessage({ message: `恢复失败`, type: 'error' });
     })
+    recoverDialogVisible.value = false;
 }
 
 </script>
@@ -125,5 +146,10 @@ const recoverHistory = (row) => {
 
 .document-tabs {
     padding: 20px;
+}
+
+:deep(.el-table__row:hover) {
+    cursor: pointer;
+    background-color: #ddd;
 }
 </style>
