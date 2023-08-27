@@ -89,7 +89,7 @@
                                 </el-table-column>
                                 <el-table-column prop="desc" label="" min-width="10%">
                                     <template #default="scope">
-                                        <el-button @click="deleteParam(scope.row.name)">删除</el-button>
+                                        <el-button @click="deleteParam(scope.row.name, 'query')">删除</el-button>
                                     </template>
                                 </el-table-column>
                             </el-table>
@@ -190,7 +190,7 @@
                             </el-table-column>
                             <el-table-column prop="desc" label="" min-width="10%">
                                 <template #default="scope">
-                                    <el-button @click="deleteParam(scope.row.name)">删除</el-button>
+                                    <el-button @click="deleteParam(scope.row.name, 'header')">删除</el-button>
                                 </template>
                             </el-table-column>
                         </el-table>
@@ -229,7 +229,7 @@
                     </span>
                 </template>
             </el-dialog>
-            <el-tabs class="border-card" type="border-card">
+            <el-tabs class="border-card" type="border-card" v-if="responses.length">
                 <el-tab-pane :label="`${response?.description}(${response?.code})`" v-for="(response, index) in responses"
                     :key="index">
                     <div class="response-content">
@@ -237,16 +237,13 @@
 
                             <el-form :inline="true" :model="newFormData" class="form-inline" label-position="right">
                                 <el-form-item label="HTTP 状态码">
-                                    <el-input v-model.number="newFormData.responses[index].code" clearable
-                                        style="width: 240px" />
+                                    <el-input v-model.number="response.code" clearable style="width: 240px" />
                                 </el-form-item>
                                 <el-form-item label="名称">
-                                    <el-input v-model="newFormData.responses[index].description" clearable
-                                        style="width: 240px" />
+                                    <el-input v-model="response.description" clearable style="width: 240px" />
                                 </el-form-item>
                                 <el-form-item label="内容格式">
-                                    <el-select v-model="newFormData.responses[index].content[0].MIME" clearable
-                                        style="width: 240px">
+                                    <el-select model-value="application/json" clearable style="width: 240px">
                                         <el-option label="JSON" value="application/json" />
                                         <!-- <el-option label="XML" value="text/xml" /> -->
                                     </el-select>
@@ -265,10 +262,10 @@
                                     <div class="param-form">
                                         <el-table :data="response?.['application/json']" style="width: 100%" row-key="id"
                                             :tree-props="{ children: 'children' }">
-                                            <el-table-column prop="name" label="属性名" min-width="30%">
+                                            <el-table-column prop="name" label="属性名" min-width="40%">
                                                 <template #default="scope">
                                                     <input type="text" v-model="scope.row.name" class="tableCell"
-                                                        placeholder="添加参数" style="display: inline-block;width: auto;" />
+                                                        placeholder="字段名" style="display: inline-block;width: auto;" />
                                                 </template>
                                             </el-table-column>
                                             <el-table-column prop="type" label="类型" min-width="10%">
@@ -287,12 +284,12 @@
                                                         placeholder="中文名" />
                                                 </template>
                                             </el-table-column>
-                                            <el-table-column label="" min-width="10%">
+                                            <el-table-column label="" min-width="20%">
                                                 <template #default="scope">
                                                     <el-tooltip class="box-item" effect="dark" content="添加子节点"
                                                         placement="top">
                                                         <el-button class="button-property_add"
-                                                            @click="addProperty(scope.row, index, 'application/json')">
+                                                            @click="addProperty(scope.row.name, index, 'application/json')">
                                                             <el-icon>
                                                                 <Plus />
                                                             </el-icon>
@@ -301,7 +298,7 @@
                                                     <el-tooltip class="box-item" effect="dark" content="删除节点"
                                                         placement="top">
                                                         <el-button class="button-property_delete"
-                                                            @click="deleteProperty(scope.row, index, 'application/json')">
+                                                            @click="deleteProperty(scope.row.name, index, 'application/json')">
                                                             <el-icon>
                                                                 <Minus />
                                                             </el-icon>
@@ -310,8 +307,7 @@
                                                 </template>
                                             </el-table-column>
                                         </el-table>
-                                        <el-button class="button-response_delete"
-                                            @click="deleteResponse(index, 'application/json')">
+                                        <el-button class="button-response_delete" @click="deleteResponse(index)">
                                             删除响应
                                         </el-button>
                                     </div>
@@ -351,17 +347,14 @@ import { apis } from '@/tools/apis.ts';
 import { storeMutation } from '@/constant/store.ts';
 import { ROUTE } from '@/constant/route.ts'
 
-const instance = getCurrentInstance();
+
 const store = useStore();
 const router = useRouter();
 
-onMounted(() => {
 
-})
-
-const aid = computed(() => router.currentRoute.value.params.apis || undefined);  // api标识
+const aid = computed(() => router.currentRoute.value.params.aid || undefined);  // api标识
 const addResponseDialogVisible = ref(false);
-const newResponseForm = ref<{[key: string]: any}>({
+const newResponseForm = ref<{ [key: string]: any }>({
     "MIME": "application/json"
 });
 
@@ -375,248 +368,75 @@ interface paramType {
     }
 }
 const oldFormData = ref();
+// const newFormData = ref();
 const newFormData = ref({
-    "path": "/projects/{pid}/apis",
-    "summary": "新建接口",
-    "parameters": [
-        {
-            "name": "pid",
-            "in": "path",
-            "description": "众团好马",
-            "required": true,
-            "schema": {
-                "type": "number"
-            }
-        },
-        {
-            "name": "qr",
-            "in": "query",
-            "description": "即断真经行低",
-            "required": true,
-            "schema": {
-                "type": "string"
-            }
-        },
-        {
-            "name": "api_key",
-            "in": "header",
-            "description": "",
-            "required": true,
-            "schema": {
-                "type": "string"
-            }
-        }
-    ],
-    "method": "POST",
-    "responses": [
-        {
-            "code": 200,
-            "description": "成功",
-            "content": [
-                {
-                    "MIME": "application/json",
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "apis": {
-                                "type": "array",
-                                "format": "object",
-                                "properties": {
-                                    "aid": {
-                                        "type": "integer"
-                                    },
-                                    "details": {
-                                        "type": "object",
-                                        "format": "APIHistory",
-                                        "properties": {
-                                            "path": {
-                                                "type": "string",
-                                                "description": "接口路径"
-                                            },
-                                            "method": {
-                                                "type": "string",
-                                                "description": "请求方式"
-                                            },
-                                            "summary": {
-                                                "type": "string",
-                                                "description": "接口概述"
-                                            },
-                                            "parameters": {
-                                                "type": "array",
-                                                "format": "object",
-                                                "description": "请求参数",
-                                                "properties": {
-                                                    "name": {
-                                                        "type": "string",
-                                                        "description": "参数键名",
-                                                    },
-                                                    "in": {
-                                                        "type": "string",
-                                                        "description": "入参位置",
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "description": "参数描述",
-                                                    },
-                                                    "required": {
-                                                        "type": "boolean",
-                                                        "description": "是否必须",
-                                                    },
-                                                    "schema": {
-                                                        "type": "object",
-                                                        "description": "参数结构",
-                                                        "properties": {
-                                                            "type": {
-                                                                "type": "string",
-                                                                "description": "响应类型",
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "type"
-                                                        ]
-                                                    }
-                                                },
-                                                "required": [
-                                                    "name",
-                                                    "in",
-                                                    "description",
-                                                    "required",
-                                                    "schema"
-                                                ],
-                                            },
-                                            "responses": {
-                                                "type": "array",
-                                                "format": "object",
-                                                "properties": {
-                                                    "code": {
-                                                        "type": "integer",
-                                                        "description": "响应码",
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "description": "响应描述",
-                                                    },
-                                                    "content": {
-                                                        "type": "array",
-                                                        "format": "object",
-                                                        "description": "响应体",
-                                                        "properties": {
-                                                            "MIME": {
-                                                                "type": "string",
-                                                                "description": "mime类型",
-                                                            },
-                                                            "schema": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "MIME",
-                                                            "schema"
-                                                        ],
-                                                    }
-                                                },
-                                                "required": [
-                                                    "code",
-                                                    "description",
-                                                    "content"
-                                                ],
-                                            },
-                                            "hid": {
-                                                "type": "integer",
-                                            },
-                                            "time": {
-                                                "type": "integer",
-                                                "description": "时间戳"
-                                            },
-                                            "uid": {
-                                                "type": "integer",
-                                                "description": "修改者"
-                                            }
-                                        },
-                                        "required": [
-                                            "path",
-                                            "method",
-                                            "summary",
-                                            "parameters",
-                                            "responses",
-                                            "hid",
-                                            "time",
-                                            "uid"
-                                        ],
-                                    }
-                                },
-                                "required": [
-                                    "aid",
-                                    "details"
-                                ],
-                            },
-                        },
-                        "required": [
-                            "apis"
-                        ],
-                    },
-                },
-                {
-                    "MIME": "text/xml",
-                    "schema": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                },
-                {
-                    "MIME": "application/x-yaml",
-                    "schema": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                },
-                {
-                    "MIME": "multipart/form-data",
-                    "schema": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                }
-            ]
-        }
-    ]
+    "path": "",
+    "summary": "",
+    "parameters": [],
+    "method": "GET",
+    "responses": []
 })
 let oldFormString: string;
 let newFormString: string;
 let editFormChanged: boolean = false;
 
 let pathParams = ref<paramType[]>([]);
-let queryParams = computed(() => {
-    return newFormData.value.parameters.filter(param => param.in === 'query').concat({
+let queryParams = ref<paramType[]>([]);
+let headerParams = ref<paramType[]>([]);
+let responses = ref([]);
+
+
+let isTableRowEditable: boolean = true;
+/* 获取当前页面类型，新建/编辑 */
+const editType = computed(() => router.currentRoute.value.params.aid !== undefined);
+
+
+/* 提取不同种类参数 */
+const extractParams = (type) => {
+    return newFormData.value.parameters.filter(param => param.in === type).concat({
         "name": "",
-        "in": "query",
+        "in": `${type}`,
         "description": "",
-        "required": false,
+        "required": true,
         "schema": {
             "type": ""
         }
     });
-});
-let headerParams = computed(() => {
-    return newFormData.value.parameters.filter(param => param.in === 'header').concat({
-        "name": "",
-        "in": "header",
-        "description": "",
-        "required": false,
-        "schema": {
-            "type": ""
-        }
+}
+
+/* 解析路径中的Path参数 */
+const getPathData = (path: string): paramType[] => {
+    let regexp = /{(\w+?)}/g;
+    let params = path.match(regexp)?.map((param) => param.slice(1, param.length - 1));
+    let result: paramType[] = [];
+    params?.forEach(param => {
+        result.push({
+            name: param,
+            in: 'path',
+            description: '',
+            required: true,
+            schema: {
+                type: ''
+            }
+        });
     });
-});
+    return result;
+}
 
+/* 处理路径输入事件 */
+const handlePathInput = () => {
+    pathParams.value = getPathData(newFormData.value.path);
+}
 
-const responses = computed(() => {
+let count = 0;
+/* swagger格式转换为树形结构 */
+const responseToTree = () => {
     return newFormData.value.responses.map((response) => {
-        const standardResponse: { [key: string]: any } = {};
-        standardResponse.code = response.code;
-        standardResponse.description = response.description;
+        const treeResponse: { [key: string]: any } = {};
+        treeResponse.code = response.code;
+        treeResponse.description = response.description;
         for (const content of response.content) {
-            let count = 0;
+            
             function parseSchema(schema: { [key: string]: any }) {
                 const arr = [];
                 for (const property in schema) {
@@ -650,69 +470,75 @@ const responses = computed(() => {
                 return arr;
             }
 
-            const { MIME, schema } = content;
-            
-            standardResponse[MIME] = [];
+            let { MIME, schema } = content;
+            schema = JSON.parse(schema);
+            treeResponse[MIME] = [];
             let rootObj: { [key: string]: any } = {};
-            rootObj.name = '根节点';
+            rootObj.name = schema.name;
             rootObj.id = count++;
             rootObj.type = schema.type;
             rootObj.required = true;
             if (schema.properties && Object.keys(schema.properties as object).length) {
                 rootObj.children = parseSchema(schema.properties);
             }
-            standardResponse[MIME].push(rootObj);
+            treeResponse[MIME].push(rootObj);
         }
-        return standardResponse;
+        return treeResponse;
     });
-});
-watch(responses, (newVal) => {
-    console.log(newVal);
-}, {
-    immediate:true
-})
-
-
-let isTableRowEditable: boolean = true;
-/* 获取当前页面类型，新建/编辑 */
-const editType = computed(() => router.currentRoute.value.params.aid !== undefined);
-
-
-/* 解析路径中的Path参数 */
-const getPathData = (path: string): paramType[] => {
-    let regexp = /{(\w+?)}/g;
-    let params = path.match(regexp)?.map((param) => param.slice(1, param.length - 1));
-    let result: paramType[] = [];
-    params?.forEach(param => {
-        result.push({
-            name: param,
-            in: 'path',
-            description: '',
-            required: true,
-            schema: {
-                type: ''
-            }
-        });
-    });
-    return result;
 }
 
-/* 处理路径输入事件 */
-const handlePathInput = () => {
-    pathParams.value = getPathData(newFormData.value.path);
+/* 树形结构转换为swagger格式 */
+const treeToResponse = () => {
+    return responses.value.map((response) => {
+        const swaggerResponse: { [key: string]: any } = {};
+        swaggerResponse.code = response.code;
+        swaggerResponse.description = response.description;
+        swaggerResponse.content = [];
+        for (const MIME in response) {
+            if (MIME !== 'code' && MIME !== 'description') {
+
+                function parseTree(children: []) {
+                    const obj: { [key: string]: any } = {};
+                    children.forEach((child: { [key: string]: any }) => {
+                        if (child.name) {
+                            obj[child.name] = {};
+                            if (child.type) obj[child.name].type = child.type;
+                            if (child.format) obj[child.name].format = child.format;
+                            if (child.description) obj[child.name].description = child.description;
+                            if (child.children) obj[child.name].properties = parseTree(child.children);
+                        }
+                    })
+                    return obj;
+                }
+
+                const content: { [key: string]: any } = {};
+                content.MIME = MIME;
+                content.schema = {};
+                content.schema.type = response[MIME][0].type;
+                content.schema.name = response[MIME][0].name;
+                content.schema.properties = parseTree(response[MIME][0].children);
+                content.schema = JSON.stringify(content.schema);
+                swaggerResponse.content.push(content);
+            }
+        }
+        return swaggerResponse;
+    });
 }
 
 /* 添加接口/修改接口 */
 if (!editType.value) {
     editFormChanged = true;
-    // 初始化path参数列表
-    handlePathInput();
+    queryParams.value = extractParams('query');
+    headerParams.value = extractParams('header');
 } else {
     store.state.apis.projectAPIs.forEach(api => {
         if (api.aid == router.currentRoute.value.params.aid) {
             newFormData.value = oldFormData.value = api.details;
             // 初始化path参数列表
             handlePathInput();
+            queryParams.value = extractParams('query');
+            headerParams.value = extractParams('header');
+            responses.value = responseToTree();
         }
     })
     nextTick(() => {
@@ -756,162 +582,163 @@ const editParams = (row, column, cell, event) => {
                     name: '',
                     in: 'query',
                     description: '',
-                    required: false,
+                    required: true,
                     schema: {
                         type: 'string'
                     }
-                })
+                });
+                queryParams.value = extractParams('query');
             }
             if (row.in === 'header' && row.index === headerParams.value.length - 1) {
                 newFormData.value.parameters.push({
                     name: '',
                     in: 'header',
                     description: '',
-                    required: false,
+                    required: true,
                     schema: {
                         type: 'string'
                     }
                 })
+                headerParams.value = extractParams('header');
             }
         })
     }
 }
 
 /* 删除参数事件 */
-const deleteParam = (deleteParamName: string) => {
-    const deleteIndex = newFormData.value.parameters.findIndex(param => param.name === deleteParamName);
-    newFormData.value.parameters.splice(deleteIndex, 1);
+const deleteParam = (deleteParamName: string, type: string) => {
+    if (type === 'query') {
+        queryParams.value.splice(queryParams.value.findIndex(param => param.name === deleteParamName), 1);
+    } else if (type === 'header') {
+        headerParams.value.splice(headerParams.value.findIndex(param => param.name === deleteParamName), 1);
+    }
 }
 
 /* 返回响应添加子节点事件 */
-const addProperty = (row, index, MIME) => {
-    const parentName = row.name;
-    const contentArr = newFormData.value.responses[index].content;
-    const contentIndex = contentArr.findIndex(content => content.MIME === MIME);
+const addProperty = (name, index, MIME) => {
+    editFormChanged = true
 
-    function addChild(propertyObj, parentName) {
-        for (const key in propertyObj) {
-            if (propertyObj.hasOwnProperty(key)) {
-                if (key === parentName) {
-                    if (!propertyObj[key].properties) {
-                        propertyObj[key].properties = {};
-                    }
-                    propertyObj[key].properties['字段名'] = {
-                        "type": "",
-                        "format": "",
-                        "properties": {},
-                        "required": []
-                    };
-                    break;
-                } else if (propertyObj[key].hasOwnProperty('properties')) {
-                    addChild(propertyObj[key].properties, parentName);
-                }
+    function addChild(parentArr, name) {
+        for (let i = 0; i < parentArr.length; i++) {
+            const property = parentArr[i];
+            if (property.name === name) {
+                if (!property.children) property.children = [];
+                property.children.push({
+                    "name": '',
+                    "type": '',
+                    "id": count++,
+                    "format": '',
+                    "description": '',
+                    "required": true
+                });
+                break;
+            } else if (property.children && property.children.length) {
+                addChild(property.children, name);
             }
         }
-        return;
     }
-
-    if (parentName === '根节点') {
-        newFormData.value.responses[index].content[contentIndex].schema.properties['字段名'] = {
-            "type": "",
-            "format": "",
-            "properties": {},
-            "required": []
-        };
+    if (!name) {
+        return;
+    } else if (name === '根节点') {
+        responses.value[index][MIME][0].children.push({
+            "name": '',
+            "type": '',
+            "id": count++,
+            "format": '',
+            "description": '',
+            "required": true
+        });
     } else {
-        addChild(newFormData.value.responses[index].content[contentIndex].schema.properties, parentName);
+        addChild(responses.value[index][MIME][0].children, name);
     }
 }
 
 /* 返回响应删除节点事件 */
-const deleteProperty = (row, index, MIME) => {
-    const name = row.name;
-    const contentArr = newFormData.value.responses[index].content;
-    const contentIndex = contentArr.findIndex(content => content.MIME === MIME);
+const deleteProperty = (name, index, MIME) => {
+    editFormChanged = true
 
-    function removeChild(parentObj, name) {
-        for (const key in parentObj) {
-            if (parentObj.hasOwnProperty(key)) {
-                if (key === name) {
-                    delete parentObj[key];
-                    break;
-                } else if (parentObj[key].hasOwnProperty('properties')) {
-                    removeChild(parentObj[key].properties, name);
-                }
+    function removeChild(parentArr, name) {
+        for (let i = 0; i < parentArr.length; i++) {
+            const property = parentArr[i];
+            if (property.name === name) {
+                parentArr.splice(i--, 1);
+                break;
+            } else if (property.children) {
+                removeChild(property.children, name);
             }
         }
-        return;
     }
 
-    removeChild(newFormData.value.responses[index].content[contentIndex].schema.properties, name);
+    removeChild(responses.value[index][MIME].children, name);
 }
 
 /* 新增响应事件 */
 const addResponse = () => {
-    const newResponse: {[key:string]: any} = {};
+    editFormChanged = true
+
+    const newResponse: { [key: string]: any } = {};
     newResponse.code = parseInt(newResponseForm.value.code);
     newResponse.description = newResponseForm.value.description;
-    newResponse.content = [];
 
-    const newContent: {[key:string]: any} = {};
-    newContent.MIME = newResponseForm.value.MIME;
-    newContent.schema = {
-        type: 'object',
-        properties: {}
-    };
-    newResponse.content.push(newContent);
-    newFormData.value.responses.push(newResponse);
+    newResponse[newResponseForm.value.MIME] = [{
+        "name": "根节点",
+        "id": count++,
+        "type": "object",
+        "required": true,
+        "children": []
+    }];
+    responses.value.push(newResponse);
 
     addResponseDialogVisible.value = false;
 }
 
 /* 删除响应事件 */
-const deleteResponse = (index, MIME) => {
-    const contentArr = newFormData.value.responses[index].content;
-    const contentIndex = contentArr.findIndex(content => content.MIME === MIME);
-    delete newFormData.value.responses[index].content[contentIndex].schema.properties;
+const deleteResponse = (index: number) => {
+    editFormChanged = true;
+    responses.value.splice(index, 1);
 }
 
 /* 表单提交事件 */
 const onSubmit = async () => {
     let newaid: number | undefined = parseInt(router.currentRoute.value.params.apis as string) || undefined;
     if (editFormChanged) {
-        // const parameters = [];
-
-        // newFormData.value.parameters.forEach(param => {
-        //     if (param.in !== 'path' || !param.name) {
-        //         parameters.push(param);
-        //     }
-        // })
-        // newFormData.value.parameters = parameters.concat(pathParams.value);
-        // console.log(newFormData.value.parameters)
-
-        newFormData.value.responses.forEach(response => {
-            response.content.forEach(content => {
-                content.schema = JSON.stringify(content.schema);
-            })
+        // 收集每种参数
+        newFormData.value.parameters = pathParams.value.concat(queryParams.value, headerParams.value)
+            .filter(param => param.name);
+        newFormData.value.parameters.forEach(param => {
+            delete param.index;
         })
+        // 收集返回响应，转换为符合请求体的参数结构
+        if (responses.value.length) newFormData.value.responses = treeToResponse();
 
+        delete newFormData.value.aid;
+        delete newFormData.value.hid;
+        delete newFormData.value.uid;
+        delete newFormData.value.time;
         // 提交表单
         if (!editType.value) {
             newaid = await store.dispatch('createInterface', { params: { pid: store.state.pid }, data: newFormData.value });
         } else {
-            newaid = await store.dispatch('updateInterface', { params: { pid: store.state.pid, aid: aid.value }, data: newFormData });
+            newaid = await store.dispatch('updateInterface', { params: { pid: store.state.pid, aid: aid.value }, data: newFormData.value });
         }
     }
 
     // 更新接口id信息并跳转
     store.commit(storeMutation.SELECT_INTERFACE, { aid: newaid })
-    router.push({
-        name: ROUTE.INTERFACE_DOCUMENT,
-        params: {
-            pid: store.state.pid,
-            aid: newaid
-        }
-    })
+    ElMessage({ message: '保存成功！', type: 'success' });
     // 保存修改的接口数据
     oldFormString = newFormString;
-    ElMessage({ message: '保存成功！', type: 'success' });
+    // 刷新接口数据
+    store.dispatch('getAll', store.state.pid as number).then(() => {
+        // 跳转接口文档页
+        router.push({
+            name: ROUTE.INTERFACE_DOCUMENT,
+            params: {
+                pid: store.state.pid,
+                aid: newaid
+            }
+        })
+    })
 };
 
 /* 接口删除事件 */
@@ -1236,6 +1063,11 @@ const handleDelete = () => {
                                 .button-property_delete {
                                     display: none;
                                 }
+                            }
+
+                            :deep(.el-table__row .el-table__cell:last-child) {
+                                display: flex;
+                                justify-content: flex-end;
                             }
                         }
                     }

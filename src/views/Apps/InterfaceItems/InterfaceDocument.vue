@@ -110,7 +110,7 @@
 
         </div>
 
-        <div class="module-response">
+        <div class="module-response" v-if="responses.length">
             <div class="title">返回响应</div>
 
             <el-tabs class="border-card" type="border-card">
@@ -241,7 +241,6 @@ onMounted(() => {
                 return standardResponse;
             });
         }
-        console.log(responses.value[0]['application/json'])
     })
 })
 
