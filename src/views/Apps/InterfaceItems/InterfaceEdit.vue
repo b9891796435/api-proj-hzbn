@@ -669,7 +669,7 @@ const deleteProperty = (name, index, MIME) => {
         }
     }
 
-    removeChild(responses.value[index][MIME].children, name);
+    removeChild(responses.value[index][MIME][0].children, name);
 }
 
 /* 新增响应事件 */

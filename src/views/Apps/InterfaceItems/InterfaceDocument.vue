@@ -35,9 +35,9 @@
             </div> -->
         </div>
 
-        <div class="module-mock">
+        <!-- <div class="module-mock">
             <div class="title">Mock</div>
-        </div>
+        </div> -->
 
         <div class="module-params">
             <div class="title">请求参数</div>
