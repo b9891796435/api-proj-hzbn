@@ -58,8 +58,7 @@ const actions = {
         let { pid, aid } = params;
         let res: any = await apis.Projects.Project.Interface.updateInterface(pid, aid, data);
         if (res?.code == ResponseCode.SUCCESS) {
-            // 返回修改后的新接口aid
-            return Promise.resolve(res.data.aid);
+            return 'ok';
         } else {
             return Promise.reject(new Error('修改失败'));
         }

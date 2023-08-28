@@ -3,10 +3,10 @@
         <div class="fixed">
             <el-form :inline="true" :model="newFormData" class="form-inline" label-position="top">
                 <el-select v-model="newFormData.method" clearable class="method method-get" style="width: 120px;">
-                    <el-option style="color: #64a838; font-weight: 600;" label="GET" value="get" />
-                    <el-option style="color: #eb913a; font-weight: 600;" label="POST" value="post" />
-                    <el-option style="color: #448ef7; font-weight: 600;" label="PUT" value="put" />
-                    <el-option style="color: #e76033; font-weight: 600;" label="DELETE" value="delete" />
+                    <el-option style="color: #64a838; font-weight: 600;" label="GET" value="GET" />
+                    <el-option style="color: #eb913a; font-weight: 600;" label="POST" value="POST" />
+                    <el-option style="color: #448ef7; font-weight: 600;" label="PUT" value="PUT" />
+                    <el-option style="color: #e76033; font-weight: 600;" label="DELETE" value="DELETE" />
                 </el-select>
                 <el-input v-model="newFormData.path" placeholder='接口路径，"/"起始' clearable class="url"
                     @input="handlePathInput" />
@@ -431,12 +431,11 @@ const handlePathInput = () => {
 let count = 0;
 /* swagger格式转换为树形结构 */
 const responseToTree = () => {
-    return newFormData.value.responses.map((response) => {
+    return newFormData.value.responses.filter(response => response.description !== "").map((response) => {
         const treeResponse: { [key: string]: any } = {};
         treeResponse.code = response.code;
         treeResponse.description = response.description;
         for (const content of response.content) {
-            
             function parseSchema(schema: { [key: string]: any }) {
                 const arr = [];
                 for (const property in schema) {
@@ -471,15 +470,19 @@ const responseToTree = () => {
             }
 
             let { MIME, schema } = content;
-            schema = JSON.parse(schema);
             treeResponse[MIME] = [];
             let rootObj: { [key: string]: any } = {};
-            rootObj.name = schema.name;
             rootObj.id = count++;
-            rootObj.type = schema.type;
-            rootObj.required = true;
-            if (schema.properties && Object.keys(schema.properties as object).length) {
-                rootObj.children = parseSchema(schema.properties);
+            if (!schema) {
+                schema = {};
+            } else {
+                schema = JSON.parse(schema);
+                rootObj.name = schema.name;
+                rootObj.type = schema.type;
+                rootObj.required = true;
+                if (schema.properties && Object.keys(schema.properties as object).length) {
+                    rootObj.children = parseSchema(schema.properties);
+                }
             }
             treeResponse[MIME].push(rootObj);
         }
@@ -700,7 +703,7 @@ const deleteResponse = (index: number) => {
 
 /* 表单提交事件 */
 const onSubmit = async () => {
-    let newaid: number | undefined = parseInt(router.currentRoute.value.params.apis as string) || undefined;
+    let newaid: number | undefined = parseInt(router.currentRoute.value.params.aid as string) || undefined;
     if (editFormChanged) {
         // 收集每种参数
         newFormData.value.parameters = pathParams.value.concat(queryParams.value, headerParams.value)
@@ -719,7 +722,28 @@ const onSubmit = async () => {
         if (!editType.value) {
             newaid = await store.dispatch('createInterface', { params: { pid: store.state.pid }, data: newFormData.value });
         } else {
-            newaid = await store.dispatch('updateInterface', { params: { pid: store.state.pid, aid: aid.value }, data: newFormData.value });
+            if (!newFormData.value.parameters.length) {
+                newFormData.value.parameters.push({
+                    "name": "",
+                    "in": "",
+                    "description": "",
+                    "required": false,
+                    "schema": {
+                        "type": ""
+                    }
+                });
+            }
+            if (!newFormData.value.responses.length) {
+                newFormData.value.responses.push({
+                    "code": 200,
+                    "description": "",
+                    "content": [{
+                        "MIME": "",
+                        "schema": ""
+                    }]
+                })
+            }
+            await store.dispatch('updateInterface', { params: { pid: store.state.pid, aid: store.state.aid }, data: newFormData.value });
         }
     }
 
@@ -991,7 +1015,7 @@ const handleDelete = () => {
         .button-response_add {
             position: absolute;
             right: 20px;
-            top: 50px;
+            top: 0;
             z-index: 2;
         }
 

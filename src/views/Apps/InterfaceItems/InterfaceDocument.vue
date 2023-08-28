@@ -185,7 +185,7 @@ onMounted(() => {
             const methodElement = document.querySelector('.method');
             methodElement!.className = `method method-${apiDetail.value?.method.toLowerCase()}`;
 
-            responses.value = apiDetail.value!.responses.map((response) => {
+            responses.value = apiDetail.value!.responses.filter(response => response.description !== "").map((response) => {
                 const standardResponse: { [key: string]: any } = {};
                 standardResponse.code = response.code;
                 standardResponse.description = response.description;
@@ -266,7 +266,7 @@ const timeFormat = (rawTime) => {
     let seconds = Math.floor((curTime.getTime() - dateObj.getTime()) / 1000);
     let minutes = Math.floor(seconds / 60);
     seconds %= 60;
-    let hours = Math.floor(minutes / 60);
+    let hours = Math.floor(minutes / 60) - 16;
     minutes %= 60;
     let days = Math.floor(hours / 24);
     hours %= 24;
@@ -284,108 +284,6 @@ const timeFormat = (rawTime) => {
     }
 }
 
-/* 存储返回响应的数据结构 */
-const responseStructure: Tree[] = [
-    {
-        label: "code",
-        type: "integer",
-        required: true,
-    },
-    {
-        label: "data",
-        type: "object",
-        required: true,
-        children: [
-            {
-                label: "id",
-                type: "integer",
-                description: "宠物ID编号",
-                required: true,
-            },
-            {
-                label: "category",
-                type: "object",
-                description: "分组",
-                required: true,
-                children: [
-                    {
-                        label: 'id',
-                        type: "integer",
-                        description: "分组ID编号",
-                        required: false,
-                    },
-                    {
-                        label: 'name',
-                        type: "string",
-                        description: "分组名称",
-                        required: false,
-                    }
-                ]
-            },
-            {
-                label: "name",
-                type: "string",
-                description: "名称",
-                required: true,
-            },
-            {
-                label: "photoUrls",
-                type: "array",
-                description: "照片URL",
-                required: true,
-            },
-            {
-                label: "tags",
-                type: "array",
-                description: "标签",
-                required: true,
-                children: [
-                    {
-                        label: 'id',
-                        type: "integer",
-                        description: "标签ID编号",
-                        required: false,
-                    },
-                    {
-                        label: 'name',
-                        type: "string",
-                        description: "标签名称",
-                        required: false,
-                    }
-                ]
-            },
-            {
-                label: "status",
-                type: "string",
-                description: "宠物销售状态",
-                required: true,
-            }
-        ]
-    }
-]
-
-/* 存储返回响应的示例 */
-const responseExample = {
-    "code": 0,
-    "data": {
-        "name": "Hello Kity",
-        "photoUrls": [
-            "http://dummyimage.com/400x400"
-        ],
-        "id": 3,
-        "category": {
-            "id": 71,
-            "name": "Cat"
-        },
-        "tags": [
-            {
-                "id": 22,
-                "name": "Cat"
-            }
-        ],
-        "status": "sold"
-    }
-}
 </script>
 
 <style lang="less" scoped>
