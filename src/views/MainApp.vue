@@ -91,9 +91,11 @@ header {
     display: flex;
     flex-direction: column;
     border-right: solid #00000022 1px;
+    height:100%;
     min-height: calc(100vh - 48px);
     background-color: #F9FAFB;
     text-align: center;
+    user-select: none;
 }
 
 .menu>* {

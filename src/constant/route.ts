@@ -6,7 +6,10 @@ export enum ROUTE {
     INTERFACE_DOCUMENT = 'InterfaceDocument',
     INTERFACE_EDIT = 'InterfaceEdit',
     INTERFACE_CREATE = 'InterfaceCreate',
+    MOCK_API = 'MockApi',
+    MOCK_PROJECT = 'MockProject',
     PROJECT_SETTING = 'ProjectSetting',
     MEMBERS_MANAGEMENT = 'MembersManagement',
-    PROJECT_MANAGEMENT = 'ProjectManagement'
+    PROJECT_MANAGEMENT = 'ProjectManagement',
+    DATA_MANAGEMENT = 'DataManagement'
 }

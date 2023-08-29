@@ -476,7 +476,11 @@ const responseToTree = () => {
             if (!schema) {
                 schema = {};
             } else {
-                schema = JSON.parse(schema);
+                try {
+                    schema = JSON.parse(schema);
+                } catch (e) {
+                    schema = {}
+                }
                 rootObj.name = schema.name;
                 rootObj.type = schema.type;
                 rootObj.required = true;

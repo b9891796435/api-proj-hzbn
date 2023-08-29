@@ -11,7 +11,7 @@ export interface APIHistory {
             MIME: string,
             schema: oas30.SchemaObject | oas30.ReferenceObject
         }[]
-    },
+    }[],
     hid: number,
     time: number,
     uid: number
