@@ -29,6 +29,8 @@ const toLogin = () => apis.login(formState.value).then(res => {
     if (res.code == ResponseCode.SUCCESS) {
         ElMessage.success('登录成功');
         localStorage.setItem(OAUTH.TOKEN, res.data?.token as string)
+        localStorage.setItem(OAUTH.UID, String(res.data?.uid as number))
+        localStorage.setItem(OAUTH.USERNAME, res.data?.username as string)
         router.push({ name: ROUTE.INTERFACE_MANAGEMENT })
     } else {
         ElMessage.error(res.message);

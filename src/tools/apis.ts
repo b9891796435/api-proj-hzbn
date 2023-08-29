@@ -23,7 +23,9 @@ export const authRequest: (url: string, headers: Headers, init?: RequestInit,) =
 export const apis = {
     login: async (args: { username: string, password: string }) => {
         return (await fetch(baseUrl + '/login', { method: 'POST', body: JSON.stringify(args), headers: { 'Content-Type': 'application/json' } })).json() as Promise<baseResponse<{
-            token: string
+            token: string,
+            uid: number,
+            username: string
         }>>;
     },
     register: async (args: { username: string, password: string }) => {
@@ -72,14 +74,20 @@ export const apis = {
                     return authRequest(`/projects/${pid}/apis`, new Headers(), { method: 'GET' });
                 },
                 updateInterface: async (pid: number, aid: number, args: APItem) => {
-                    return authRequest(`/projects/${pid}/apis/${aid}`, new Headers(), { method: 'PUT', body: JSON.stringify(args)});
+                    return authRequest(`/projects/${pid}/apis/${aid}`, new Headers(), { method: 'PUT', body: JSON.stringify(args) });
                 },
                 deleteInterface: async (pid: number, aid: number) => {
                     return authRequest(`/projects/${pid}/apis/${aid}`, new Headers(), { method: 'DELETE' });
                 },
                 createInterface: async (pid: number, args: APItem) => {
                     return authRequest(`/projects/${pid}/apis`, new Headers(), { method: 'POST', body: JSON.stringify(args) });
-                }
+                },
+                getHistory: async (pid: number, aid: number) => {
+                    return authRequest(`/projects/${pid}/apis/${aid}/history`, new Headers(), { method: 'GET' });
+                },
+                recoverHistory: async (pid: number, aid: number, hid: number) => {
+                    return authRequest(`/projects/${pid}/apis/${aid}/history`, new Headers(), { method: 'PUT', body: JSON.stringify({ hid }) });
+                },
             }
         }
     }

@@ -77,6 +77,7 @@ let deleteList: number[] = reactive([]);
 const getApis = () => {
     store.dispatch('getAll', store.state.pid as number).then(() => {
         apiData.value = store.state.apis.projectAPIs;
+        console.log(apiData.value);
     })
 }
 
@@ -136,8 +137,11 @@ const handleDelete = () => {
         apis.Projects.Project.Interface.deleteInterface(store.state.pid as number, aid as number);
     });
     Promise.all(deletePromisesList).then(() => {
+
+        for (let i = 0; i < 10; i++) {
+            getApis();
+        }
         ElMessage({ message: '选中的接口已全部移动到回收站', type: 'success' });
-        getApis();
     }).catch(err => {
         ElMessage({ message: err, type: 'error' });
     })

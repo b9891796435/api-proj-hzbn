@@ -35,9 +35,9 @@
             </div> -->
         </div>
 
-        <div class="module-mock">
+        <!-- <div class="module-mock">
             <div class="title">Mock</div>
-        </div>
+        </div> -->
 
         <div class="module-params">
             <div class="title">请求参数</div>
@@ -86,57 +86,37 @@
                 </div>
             </el-card>
 
+            <el-card class="box-card" v-if="headerParams?.length != 0">
+                <template #header>
+                    <div class="card-header">
+                        <span>Header参数</span>
+                        <el-button class="button" text>生成代码</el-button>
+                    </div>
+                </template>
+                <div v-for="(parameter, index) in headerParams" :key="index" class="card__item">
+                    <div class="param-detail">
+                        <div class="param-name">{{ parameter?.name }}</div>
+                        <div class="param-type">{{ parameter?.schema?.type }}</div>
+                        <div class="param-required" :class="{ need: parameter?.required }">{{ parameter?.required ? '必需' :
+                            '可选' }}</div>
+                    </div>
+                    <p class="param-desc">{{ parameter?.description }}</p>
+                    <!-- <p class="param-case">
+                        示例值：
+                        <span class="value">1</span>
+                    </p> -->
+                </div>
+            </el-card>
+
         </div>
 
-        <div class="module-response">
+        <div class="module-response" v-if="responses.length">
             <div class="title">返回响应</div>
 
             <el-tabs class="border-card" type="border-card">
-                <el-tab-pane label="成功(200)">
-                    <!-- <div class="response-content">
-                        <div class="response-info">
-                            <span class="thin">HTTP 状态码: </span><span class="response-info__item">200</span>
-                            <span class="thin">内容格式: </span><span class="response-info__item">JSON</span>
-                        </div>
-                        <div class="structure">
-                            <el-card class="box-card">
-                                <template #header>
-                                    <div class="card-header">
-                                        <span>数据结构</span>
-                                    </div>
-                                </template>
-                                <div class="structure-content">
-                                    <el-tree :data="responseStructure" :props="defaultProps" @node-click="handleNodeClick"
-                                        default-expand-all>
-                                        <template #default="{ node, data }">
-                                            <span class="custom-tree-node">
-                                                <span class="label-name">{{ node.label }}</span>
-                                                <span class="label-type">{{ data.type }}</span>
-                                                <span class="label-description">{{ data.description }}</span>
-                                                <span class="label-required" :class="{ need: data.required }">{{
-                                                    data.required ? '必需' : '可选'
-                                                }}</span>
-                                            </span>
-                                        </template>
-                                    </el-tree>
-                                </div>
-                            </el-card>
-                        </div>
-                        <div class="example">
-                            <el-card class="box-card">
-                                <template #header>
-                                    <div class="card-header">
-                                        <span>示例</span>
-                                    </div>
-                                </template>
-                                <div class="example-content">
-                                    <pre>{{ JSON.stringify(responseExample, null, "    ") }}</pre>
-                                </div>
-                            </el-card>
-                        </div>
-                    </div> -->
+                <el-tab-pane :label="`${response?.description}(${response?.code})`" v-for="(response, index) in responses" :key="index">
                     <div class="response-info">
-                        <span class="thin">HTTP 状态码: </span><span class="response-info__item">200</span>
+                        <span class="thin">HTTP 状态码: </span><span class="response-info__item">{{ response?.code }}</span>
                         <span class="thin">内容格式: </span><span class="response-info__item">JSON</span>
                     </div>
 
@@ -145,11 +125,10 @@
                             <el-table-column prop="structure" label="数据结构" min-width="60%">
 
                                 <div class="content-structure">
-                                    <el-tree :data="responseStructure" :props="defaultProps" @node-click="handleNodeClick"
-                                        default-expand-all>
+                                    <el-tree :data="response['application/json']" :props="defaultProps" default-expand-all>
                                         <template #default="{ node, data }">
                                             <span class="custom-tree-node">
-                                                <span class="label-name">{{ node.label }}</span>
+                                                <span class="label-name">{{ data.name }}</span>
                                                 <span class="label-type">{{ data.type }}</span>
                                                 <span class="label-description">{{ data.description }}</span>
                                                 <span class="label-required" :class="{ need: data.required }">{{
@@ -162,18 +141,14 @@
 
                             </el-table-column>
 
-                            <el-table-column prop="example" label="示例" min-width="40%">
-
+                            <!-- <el-table-column prop="example" label="示例" min-width="40%">
                                 <div class="content-example">
                                     <pre>{{ JSON.stringify(responseExample, null, "    ") }}</pre>
                                 </div>
+                            </el-table-column> -->
 
-                            </el-table-column>
                         </el-table>
                     </div>
-                </el-tab-pane>
-                <el-tab-pane label="记录不存在(404)">
-                    记录不存在(404)
                 </el-tab-pane>
             </el-tabs>
 
@@ -189,24 +164,16 @@ import { ElMessage } from 'element-plus'
 import { APIHistory, APItem } from '@/types/apis'
 import { ROUTE } from '@/constant/route.ts'
 
-interface Tree {
-    label: string,
-    type: string,
-    description?: string,
-    required: boolean,
-    children?: Tree[]
-}
-
 const defaultProps = {
     children: 'children',
-    label: 'label'
+    label: 'name'
 }
 
 const store = useStore();
-// const instance = getCurrentInstance();
 const router = useRouter();
 
 const apiDetail = ref<APIHistory>();
+const responses = ref([]);
 const pathParams = computed(() => apiDetail.value?.parameters.filter(param => param.in === 'path'));
 const queryParams = computed(() => apiDetail.value?.parameters.filter(param => param.in === 'query'));
 const headerParams = computed(() => apiDetail.value?.parameters.filter(param => param.in === 'header'));
@@ -216,27 +183,79 @@ onMounted(() => {
         if (api.aid == router.currentRoute.value.params.aid) {
             apiDetail.value = api.details;
             const methodElement = document.querySelector('.method');
-            methodElement!.className = `method method-${apiDetail.value?.method.toLowerCase()}`; 
+            methodElement!.className = `method method-${apiDetail.value?.method.toLowerCase()}`;
+
+            responses.value = apiDetail.value!.responses.filter(response => response.description !== "").map((response) => {
+                const standardResponse: { [key: string]: any } = {};
+                standardResponse.code = response.code;
+                standardResponse.description = response.description;
+                for (const content of response.content) {
+                    let count = 0;
+                    function parseSchema(schema: { [key: string]: any }) {
+                        const arr = [];
+                        for (const property in schema) {
+                            const newObj: { [key: string]: any } = {};
+                            newObj.name = property;
+                            newObj.required = true;
+                            newObj.id = count++;
+
+                            const propertyObj = schema[property];
+                            for (const key in propertyObj) {
+                                if (propertyObj.hasOwnProperty(key)) {
+                                    switch (key) {
+                                        case 'type':
+                                        case 'format':
+                                        case 'description':
+                                            newObj[key] = propertyObj[key];
+                                            break;
+                                        case 'properties':
+                                            newObj.children = parseSchema(propertyObj[key]);
+                                            break;
+                                        // case 'required':
+                                        //     newObj[key] = propertyObj[key].includes(property);
+                                        //     break;
+                                        default:
+                                            break;
+                                    }
+                                }
+                            }
+                            arr.push(newObj);
+                        }
+                        return arr;
+                    }
+
+                    const MIME = content.MIME;
+                    const schema = JSON.parse(content.schema);
+
+                    standardResponse[MIME] = [];
+                    let rootObj: { [key: string]: any } = {};
+                    rootObj.name = '根节点';
+                    rootObj.id = count++;
+                    rootObj.type = schema.type;
+                    rootObj.required = true;
+                    if (schema.properties && Object.keys(schema.properties as object).length) {
+                        rootObj.children = parseSchema(schema.properties);
+                    }
+                    standardResponse[MIME].push(rootObj);
+                }
+                return standardResponse;
+            });
         }
     })
 })
+
 
 /* 接口删除事件 */
 const handleDelete = () => {
     store.dispatch('deleteInterface', { pid: store.state.pid, aid: store.state.aid }).then(() => {
         ElMessage({ message: '已移动到回收站', type: 'success' });
-        router.push({ 
+        router.push({
             name: ROUTE.INTERFACE_MANAGEMENT,
             params: {
                 pid: store.state.pid
             }
         });
     });
-}
-
-/* 数据结构节点点击事件 */
-const handleNodeClick = (data: Tree) => {
-    console.log(data);
 }
 
 /* 转换时间格式 */
@@ -247,7 +266,7 @@ const timeFormat = (rawTime) => {
     let seconds = Math.floor((curTime.getTime() - dateObj.getTime()) / 1000);
     let minutes = Math.floor(seconds / 60);
     seconds %= 60;
-    let hours = Math.floor(minutes / 60);
+    let hours = Math.floor(minutes / 60) - 16;
     minutes %= 60;
     let days = Math.floor(hours / 24);
     hours %= 24;
@@ -265,108 +284,6 @@ const timeFormat = (rawTime) => {
     }
 }
 
-/* 存储返回响应的数据结构 */
-const responseStructure: Tree[] = [
-    {
-        label: "code",
-        type: "integer",
-        required: true,
-    },
-    {
-        label: "data",
-        type: "object",
-        required: true,
-        children: [
-            {
-                label: "id",
-                type: "integer",
-                description: "宠物ID编号",
-                required: true,
-            },
-            {
-                label: "category",
-                type: "object",
-                description: "分组",
-                required: true,
-                children: [
-                    {
-                        label: 'id',
-                        type: "integer",
-                        description: "分组ID编号",
-                        required: false,
-                    },
-                    {
-                        label: 'name',
-                        type: "string",
-                        description: "分组名称",
-                        required: false,
-                    }
-                ]
-            },
-            {
-                label: "name",
-                type: "string",
-                description: "名称",
-                required: true,
-            },
-            {
-                label: "photoUrls",
-                type: "array",
-                description: "照片URL",
-                required: true,
-            },
-            {
-                label: "tags",
-                type: "array",
-                description: "标签",
-                required: true,
-                children: [
-                    {
-                        label: 'id',
-                        type: "integer",
-                        description: "标签ID编号",
-                        required: false,
-                    },
-                    {
-                        label: 'name',
-                        type: "string",
-                        description: "标签名称",
-                        required: false,
-                    }
-                ]
-            },
-            {
-                label: "status",
-                type: "string",
-                description: "宠物销售状态",
-                required: true,
-            }
-        ]
-    }
-]
-
-/* 存储返回响应的示例 */
-const responseExample = {
-    "code": 0,
-    "data": {
-        "name": "Hello Kity",
-        "photoUrls": [
-            "http://dummyimage.com/400x400"
-        ],
-        "id": 3,
-        "category": {
-            "id": 71,
-            "name": "Cat"
-        },
-        "tags": [
-            {
-                "id": 22,
-                "name": "Cat"
-            }
-        ],
-        "status": "sold"
-    }
-}
 </script>
 
 <style lang="less" scoped>
@@ -491,8 +408,7 @@ const responseExample = {
             }
 
             .card__item {
-                padding-top: 25px;
-                margin-bottom: 30px;
+                margin-bottom: 20px;
 
                 .param-detail {
                     display: flex;
@@ -598,10 +514,12 @@ const responseExample = {
                         font-weight: 400;
                         color: black;
                     }
+
                     :deep(.el-table__row .el-table__cell) {
                         vertical-align: text-top;
                     }
                 }
+
                 .content-structure {
                     .el-tree {
                         .custom-tree-node {
@@ -639,11 +557,12 @@ const responseExample = {
                             }
                         }
 
-                        :deep(.el-tree-node) {
-                            margin: 25px 0px;
+                        :deep(.el-tree-node__content) {
+                            margin-top: 20px;
                         }
                     }
                 }
+
                 .content-example {
                     color: black;
                     font-size: 16px;
@@ -670,5 +589,4 @@ const responseExample = {
             }
         }
     }
-}
-</style>
+}</style>
