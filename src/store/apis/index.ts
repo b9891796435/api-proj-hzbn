@@ -1,5 +1,3 @@
-import { reqProjectAPIs, reqUpdateAPI, reqDeleteAPI } from "@/api";
-import { ActionContext } from "vuex";
 import { apis } from '@/tools/apis.ts';
 import { APItem } from '@/types/apis';
 import { ResponseCode } from '@/types/Response.ts';
@@ -54,7 +52,7 @@ const actions = {
             return Promise.reject(new Error(res.description));
         }
     },
-    async updateInterface({ commit }: any, { params, data }: any) {
+    async updateInterface(_: any, { params, data }: any) {
         let { pid, aid } = params;
         let res: any = await apis.Projects.Project.Interface.updateInterface(pid, aid, data);
         if (res?.code == ResponseCode.SUCCESS) {
@@ -63,8 +61,8 @@ const actions = {
             return Promise.reject(new Error('修改失败'));
         }
     },
-    async createInterface({ commit }: any, { params, data }: any) {
-        let { pid, aid } = params;
+    async createInterface(_: any, { params, data }: any) {
+        let { pid } = params;
         let res: any = await apis.Projects.Project.Interface.createInterface(pid, data);
         if (res?.code == ResponseCode.SUCCESS) {
             // 返回修改后的新接口aid
@@ -73,7 +71,7 @@ const actions = {
             return Promise.reject(new Error('新建失败'));
         }
     },
-    async deleteInterface({ commit }: any, { pid, aid }: { pid: number, aid: number }) {
+    async deleteInterface(_: any, { pid, aid }: { pid: number, aid: number }) {
         let res: any = await apis.Projects.Project.Interface.deleteInterface(pid, aid);
         if (res?.code !== ResponseCode.SUCCESS) {
             return Promise.reject(new Error('删除失败'));
@@ -88,7 +86,7 @@ const actions = {
             return Promise.reject(new Error(res.description));
         }
     },
-    async recoverHistory({ commit }: any, { pid, aid, hid }: { pid: number, aid: number, hid: number }) {
+    async recoverHistory(_: any, { pid, aid, hid }: { pid: number, aid: number, hid: number }) {
         let res: any = await apis.Projects.Project.Interface.recoverHistory(pid, aid, hid);
         if (res?.code == ResponseCode.SUCCESS) {
             return 'ok';

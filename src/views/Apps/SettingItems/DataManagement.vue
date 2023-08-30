@@ -81,7 +81,20 @@ const handleSubmit = async () => {
                     for (let l in responses[k].content) {
                         contents.push(Object.assign({}, responses[k].content[l], { MIME: k }))
                     }
-                    responses[k].content=contents
+                    responses[k].content = contents
+                }
+                let parameters = interfaces[i][j].parameters;
+                if (interfaces[i][j].requestBody) {
+                    for (let k in interfaces[i][j].requestBody.content) {
+                        parameters.push({
+                            name: 'requestBody',
+                            in: 'body',
+                            description: '',
+                            required: true,
+                            MIME: k,
+                            schema: interfaces[i][j].requestBody.content[k].schema
+                        })
+                    }
                 }
                 promises.push(apis.Projects.Project.Interface.createInterface(pid.value, {
                     path: i.replace(/\{([^}]+)\}/g, ":$1"),

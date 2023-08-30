@@ -2,8 +2,8 @@ import { OAUTH } from "../constant/login";
 import { ElMessage } from 'element-plus';
 import router from "../router";
 import baseResponse from '../types/Response'
-import { APIHistory, APItem } from "@/types/apis";
-let baseUrl = 'http://localhost:5173/api'
+import { APIHistory } from "@/types/apis";
+let baseUrl = 'http://49.233.63.192:7001'
 export const authRequest: (url: string, headers: Headers, init?: RequestInit,) => null | Promise<baseResponse<any>> = async (url, headers, init?) => {
     const auth = localStorage.getItem(OAUTH.TOKEN);
     if (auth == null || auth == '') {

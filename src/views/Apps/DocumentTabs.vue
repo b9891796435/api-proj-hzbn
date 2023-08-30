@@ -9,10 +9,10 @@
         <el-tab-pane label="修改文档" :name="ROUTE.INTERFACE_EDIT">
             <router-view></router-view>
         </el-tab-pane>
-        <el-tab-pane label="运行" name="run">
+        <el-tab-pane label="运行" :name="ROUTE.MOCK_API">
             <router-view></router-view>
         </el-tab-pane>
-        <el-tab-pane label="高级Mock" name="mock">
+        <el-tab-pane label="高级Mock" :name="ROUTE.MOCK_PROJECT">
             <router-view></router-view>
         </el-tab-pane>
     </el-tabs>
@@ -37,7 +37,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { ROUTE } from '@/constant/route.ts';
@@ -58,7 +58,7 @@ const recoverDialogVisible = ref(false);
 const recoverRow = ref();
 const historyInfo = ref<History[]>([]);
 
-const timeFormat = (rawTime) => {
+const timeFormat = (rawTime: string) => {
     const dateObj = new Date(rawTime);
     const curTime = new Date();
 
@@ -96,7 +96,7 @@ onMounted(() => {
     getHistory();
 })
 
-const changeRoute = (tab) => {
+const changeRoute = (tab: any) => {
     router.push({
         name: tab.paneName,
         params: {
@@ -112,7 +112,7 @@ const openHistory = () => {
 }
 
 /* 点击历史版本事件 */
-const handleHistoryClick = (row) => {
+const handleHistoryClick = (row: History) => {
     recoverDialogVisible.value = true;
     recoverRow.value = row;
 }

@@ -338,21 +338,22 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, watch, onMounted, getCurrentInstance, nextTick, computed } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router';
-import { APItem } from '@/types/apis.ts';
-import { apis } from '@/tools/apis.ts';
+// import { APItem } from '@/types/apis.ts';
+// import { apis } from '@/tools/apis.ts';
 import { storeMutation } from '@/constant/store.ts';
 import { ROUTE } from '@/constant/route.ts'
+import { APItem } from '@/types/apis';
 
 
 const store = useStore();
 const router = useRouter();
 
 
-const aid = computed(() => router.currentRoute.value.params.aid || undefined);  // api标识
+// const aid = computed(() => router.currentRoute.value.params.aid || undefined);  // api标识
 const addResponseDialogVisible = ref(false);
 const newResponseForm = ref<{ [key: string]: any }>({
     "MIME": "application/json"
@@ -369,7 +370,7 @@ interface paramType {
 }
 const oldFormData = ref();
 // const newFormData = ref();
-const newFormData = ref({
+const newFormData = ref<any>({
     "path": "",
     "summary": "",
     "parameters": [],
@@ -383,7 +384,7 @@ let editFormChanged: boolean = false;
 let pathParams = ref<paramType[]>([]);
 let queryParams = ref<paramType[]>([]);
 let headerParams = ref<paramType[]>([]);
-let responses = ref([]);
+let responses = ref<any[]>([]);
 
 
 let isTableRowEditable: boolean = true;
@@ -392,8 +393,9 @@ const editType = computed(() => router.currentRoute.value.params.aid !== undefin
 
 
 /* 提取不同种类参数 */
-const extractParams = (type) => {
-    return newFormData.value.parameters.filter(param => param.in === type).concat({
+const extractParams = (type: string) => {
+    return newFormData.value.parameters.filter((param: any) => param.in === type).concat({
+        //@ts-ignore
         "name": "",
         "in": `${type}`,
         "description": "",
@@ -431,7 +433,7 @@ const handlePathInput = () => {
 let count = 0;
 /* swagger格式转换为树形结构 */
 const responseToTree = () => {
-    return newFormData.value.responses.filter(response => response.description !== "").map((response) => {
+    return newFormData.value.responses.filter((response: any) => response.description !== "").map((response: any) => {
         const treeResponse: { [key: string]: any } = {};
         treeResponse.code = response.code;
         treeResponse.description = response.description;
@@ -538,8 +540,8 @@ if (!editType.value) {
     queryParams.value = extractParams('query');
     headerParams.value = extractParams('header');
 } else {
-    store.state.apis.projectAPIs.forEach(api => {
-        if (api.aid == router.currentRoute.value.params.aid) {
+    store.state.apis.projectAPIs.forEach((api: APItem) => {
+        if (String(api.aid) == router.currentRoute.value.params.aid) {
             newFormData.value = oldFormData.value = api.details;
             // 初始化path参数列表
             handlePathInput();
@@ -577,7 +579,7 @@ const getRowIndex = (data: any) => {
 }
 
 /* 参数表格可编辑 */
-const editParams = (row, column, cell, event) => {
+const editParams = (row: any, _column: any, _cell: any, event: any) => {
     if (!isTableRowEditable) return;
     const editableCell = event.target.parentNode;
     if (editableCell) {
@@ -622,10 +624,10 @@ const deleteParam = (deleteParamName: string, type: string) => {
 }
 
 /* 返回响应添加子节点事件 */
-const addProperty = (name, index, MIME) => {
+const addProperty = (name: any, index: any, MIME: any) => {
     editFormChanged = true
 
-    function addChild(parentArr, name) {
+    function addChild(parentArr: any, name: any) {
         for (let i = 0; i < parentArr.length; i++) {
             const property = parentArr[i];
             if (property.name === name) {
@@ -661,10 +663,10 @@ const addProperty = (name, index, MIME) => {
 }
 
 /* 返回响应删除节点事件 */
-const deleteProperty = (name, index, MIME) => {
+const deleteProperty = (name: any, index: any, MIME: any) => {
     editFormChanged = true
 
-    function removeChild(parentArr, name) {
+    function removeChild(parentArr: any, name: any) {
         for (let i = 0; i < parentArr.length; i++) {
             const property = parentArr[i];
             if (property.name === name) {
@@ -712,7 +714,7 @@ const onSubmit = async () => {
         // 收集每种参数
         newFormData.value.parameters = pathParams.value.concat(queryParams.value, headerParams.value)
             .filter(param => param.name);
-        newFormData.value.parameters.forEach(param => {
+        newFormData.value.parameters.forEach((param: any) => {
             delete param.index;
         })
         // 收集返回响应，转换为符合请求体的参数结构
@@ -1062,10 +1064,6 @@ const handleDelete = () => {
                 .response-info {
                     line-height: 60px;
                     text-align: center;
-
-                    .form-inline {
-                        .el-select {}
-                    }
                 }
 
                 .structure {

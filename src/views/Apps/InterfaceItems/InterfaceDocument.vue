@@ -52,7 +52,7 @@
                 <div v-for="(parameter, index) in pathParams" :key="index" class="card__item">
                     <div class="param-detail">
                         <div class="param-name">{{ parameter?.name }}</div>
-                        <div class="param-type">{{ parameter?.schema?.type }}</div>
+                        <div class="param-type">{{ (parameter?.schema as SchemaObject | null)?.type }}</div>
                         <div class="param-required" :class="{ need: parameter?.required }">{{ parameter?.required ? '必需' :
                             '可选' }}</div>
                     </div>
@@ -74,7 +74,7 @@
                 <div v-for="(parameter, index) in queryParams" :key="index" class="card__item">
                     <div class="param-detail">
                         <div class="param-name">{{ parameter?.name }}</div>
-                        <div class="param-type">{{ parameter?.schema?.type }}</div>
+                        <div class="param-type">{{ (parameter?.schema as SchemaObject | null)?.type }}</div>
                         <div class="param-required" :class="{ need: parameter?.required }">{{ parameter?.required ? '必需' :
                             '可选' }}</div>
                     </div>
@@ -96,7 +96,7 @@
                 <div v-for="(parameter, index) in headerParams" :key="index" class="card__item">
                     <div class="param-detail">
                         <div class="param-name">{{ parameter?.name }}</div>
-                        <div class="param-type">{{ parameter?.schema?.type }}</div>
+                        <div class="param-type">{{ (parameter?.schema as SchemaObject | null)?.type }}</div>
                         <div class="param-required" :class="{ need: parameter?.required }">{{ parameter?.required ? '必需' :
                             '可选' }}</div>
                     </div>
@@ -114,7 +114,8 @@
             <div class="title">返回响应</div>
 
             <el-tabs class="border-card" type="border-card">
-                <el-tab-pane :label="`${response?.description}(${response?.code})`" v-for="(response, index) in responses" :key="index">
+                <el-tab-pane :label="`${response?.description}(${response?.code})`" v-for="(response, index) in responses"
+                    :key="index">
                     <div class="response-info">
                         <span class="thin">HTTP 状态码: </span><span class="response-info__item">{{ response?.code }}</span>
                         <span class="thin">内容格式: </span><span class="response-info__item">JSON</span>
@@ -126,7 +127,7 @@
 
                                 <div class="content-structure">
                                     <el-tree :data="response['application/json']" :props="defaultProps" default-expand-all>
-                                        <template #default="{ node, data }">
+                                        <template #default="{ data }">
                                             <span class="custom-tree-node">
                                                 <span class="label-name">{{ data.name }}</span>
                                                 <span class="label-type">{{ data.type }}</span>
@@ -157,12 +158,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted, getCurrentInstance } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { APIHistory, APItem } from '@/types/apis'
 import { ROUTE } from '@/constant/route.ts'
+import { SchemaObject } from 'openapi3-ts/dist/oas30'
 
 const defaultProps = {
     children: 'children',
@@ -173,14 +175,14 @@ const store = useStore();
 const router = useRouter();
 
 const apiDetail = ref<APIHistory>();
-const responses = ref([]);
+const responses = ref<{ [index: string]: any }[]>([]);
 const pathParams = computed(() => apiDetail.value?.parameters.filter(param => param.in === 'path'));
 const queryParams = computed(() => apiDetail.value?.parameters.filter(param => param.in === 'query'));
 const headerParams = computed(() => apiDetail.value?.parameters.filter(param => param.in === 'header'));
 
 onMounted(() => {
-    store.state.apis.projectAPIs.forEach(api => {
-        if (api.aid == router.currentRoute.value.params.aid) {
+    store.state.apis.projectAPIs.forEach((api: APItem) => {
+        if (String(api.aid) == router.currentRoute.value.params.aid) {
             apiDetail.value = api.details;
             const methodElement = document.querySelector('.method');
             methodElement!.className = `method method-${apiDetail.value?.method.toLowerCase()}`;
@@ -225,7 +227,12 @@ onMounted(() => {
                     }
 
                     const MIME = content.MIME;
-                    const schema = JSON.parse(content.schema);
+                    let schema;
+                    try {
+                        schema = JSON.parse((content.schema as unknown as string));
+                    } catch (error) {
+                        schema = content.schema;
+                    }
 
                     standardResponse[MIME] = [];
                     let rootObj: { [key: string]: any } = {};
@@ -259,7 +266,8 @@ const handleDelete = () => {
 }
 
 /* 转换时间格式 */
-const timeFormat = (rawTime) => {
+const timeFormat = (rawTime?: string | number) => {
+    if (rawTime == undefined) return '';
     const dateObj = new Date(rawTime);
     const curTime = new Date();
 
@@ -351,7 +359,6 @@ const timeFormat = (rawTime) => {
                 background-color: #e76033;
             }
 
-            .url {}
 
             .state {
                 width: 115px;
@@ -383,7 +390,6 @@ const timeFormat = (rawTime) => {
         .description {
             margin-top: 30px;
 
-            .content {}
         }
     }
 
@@ -589,4 +595,5 @@ const timeFormat = (rawTime) => {
             }
         }
     }
-}</style>
+}
+</style>

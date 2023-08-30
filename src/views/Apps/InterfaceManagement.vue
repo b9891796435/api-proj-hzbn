@@ -35,14 +35,14 @@
                             scope.row.details.path }}</span></template>
                     </el-table-column>
                     <el-table-column prop="group" label="接口分组" min-width="20%">
-                        <template #default="scope"><span>项目A</span></template>
+                        <template #default="_scope"><span>项目A</span></template>
                     </el-table-column>
                     <el-table-column prop="state" label="接口状态" min-width="20%">
-                        <template #default="scope"><span>开发中</span></template>
+                        <template #default="_scope"><span>开发中</span></template>
                     </el-table-column>
                 </el-table>
-                <el-button class="button-delete" color="#8076c3" size="large"
-                    type="primary" @click="handleDelete">删除</el-button>
+                <el-button class="button-delete" color="#8076c3" size="large" type="primary"
+                    @click="handleDelete">删除</el-button>
             </div>
         </el-card>
     </div>
@@ -55,7 +55,6 @@ import { ElMessage } from 'element-plus';
 import { APItem } from '@/types/apis';
 import { storeMutation } from '@/constant/store.ts';
 import { apis } from '@/tools/apis.ts';
-import { ResponseCode } from '@/types/Response.ts';
 import { ROUTE } from '@/constant/route.ts'
 
 const store = useStore();
@@ -244,4 +243,5 @@ const handleDelete = () => {
             }
         }
     }
-}</style>
+}
+</style>
