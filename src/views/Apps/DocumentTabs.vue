@@ -9,10 +9,10 @@
         <el-tab-pane label="修改文档" :name="ROUTE.INTERFACE_EDIT">
             <router-view></router-view>
         </el-tab-pane>
-        <el-tab-pane label="运行" :name="ROUTE.MOCK_API">
+        <el-tab-pane label="运行">
             <router-view></router-view>
         </el-tab-pane>
-        <el-tab-pane label="高级Mock" :name="ROUTE.MOCK_PROJECT">
+        <el-tab-pane label="高级Mock" >
             <router-view></router-view>
         </el-tab-pane>
     </el-tabs>

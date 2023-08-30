@@ -8,8 +8,6 @@ import ProjectManagement from "../views/Apps/SettingItems/ProjectManagement.vue"
 import InterfaceDocument from '../views/Apps/InterfaceItems/InterfaceDocument.vue';
 import InterfaceEdit from '../views/Apps/InterfaceItems/InterfaceEdit.vue';
 import DocumentTabs from '../views/Apps/DocumentTabs.vue';
-import MockApi from "@/views/Apps/MockItems/MockApi.vue";
-import MockProject from "@/views/Apps/MockItems/MockProject.vue";
 import DataManagement from "@/views/Apps/SettingItems/DataManagement.vue";
 import { ROUTE } from '../constant/route'
 
@@ -47,15 +45,7 @@ const routes: Array<RouteRecordRaw> = [
                     path: 'InterfaceEdit',
                     name: ROUTE.INTERFACE_EDIT,
                     component: InterfaceEdit,
-                }, {
-                    path: 'MockApi',
-                    name: ROUTE.MOCK_API,
-                    component: MockApi
-                }, {
-                    path: 'MockProject',
-                    name: ROUTE.MOCK_PROJECT,
-                    component: MockProject
-                }
+                }, 
             ]
         },
         {
